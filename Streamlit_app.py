@@ -9,6 +9,8 @@ from sklearn.preprocessing import StandardScaler
 import shap
 import plotly.express as px
 
+st.set_page_config(page_title="PCOS Prediction App", page_icon="🩺", layout="wide")
+
 # Load dataset
 @st.cache_data
 def load_data():
