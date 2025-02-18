@@ -70,8 +70,12 @@ ax.set_title("Distribution of PCOS Cases")
 st.pyplot(fig)
 
 # Graph 2: Correlation Heatmap
+# Filter only numeric columns before calculating correlation
+numeric_cols = df.select_dtypes(include=[np.number]).columns
+corr = df[numeric_cols].corr()
+
+# Now plot the correlation heatmap
 st.subheader("🔍 Feature Correlation Heatmap")
-corr = df.corr()
 fig, ax = plt.subplots(figsize=(10, 8))
 sns.heatmap(corr, annot=True, cmap='coolwarm', ax=ax, linewidths=0.5, fmt='.2f')
 ax.set_title("Correlation Matrix of Features")
