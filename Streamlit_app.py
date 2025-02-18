@@ -89,19 +89,25 @@ sns.barplot(x=importance, y=X.columns, ax=ax, palette="Blues_d")
 ax.set_title("Feature Importance from Random Forest Model")
 st.pyplot(fig)
 
-# SHAP Explainer (corrected approach)
+# SHAP Explainer (debugging approach)
 st.subheader("💡 SHAP Summary Plot (Model Interpretability)")
 
-# Check the dimensions of shap_values for both classes (class 0 and class 1)
+# Get SHAP values for both classes
 shap_values_class_0 = shap_values[0]
 shap_values_class_1 = shap_values[1]
 
-# Ensure that shap_values and X_train have matching dimensions
-assert shap_values_class_1.shape[1] == X_train.shape[1], "Mismatch between SHAP values and feature dimensions!"
+# Print the shapes of SHAP values and X_train for debugging
+st.write(f"Shape of SHAP values for class 0: {shap_values_class_0.shape}")
+st.write(f"Shape of SHAP values for class 1: {shap_values_class_1.shape}")
+st.write(f"Shape of X_train: {X_train.shape}")
 
-# Plot SHAP values for class 1 (or class 0 if needed)
-shap.summary_plot(shap_values_class_1, X_train, feature_names=X.columns)
-st.pyplot(plt)
+# Check for the dimension mismatch
+if shap_values_class_1.shape[1] != X_train.shape[1]:
+    st.error(f"Mismatch between SHAP values and feature dimensions: SHAP values have {shap_values_class_1.shape[1]} features, but X_train has {X_train.shape[1]} features.")
+else:
+    # Plot SHAP values for class 1
+    shap.summary_plot(shap_values_class_1, X_train, feature_names=X.columns)
+    st.pyplot(plt)
 
 # Sidebar for User Input Section
 st.sidebar.header("📌 User Input Parameters")
