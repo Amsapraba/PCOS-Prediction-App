@@ -1,4 +1,7 @@
-import streamlit as st
+import streamlit as st  # ✅ First import Streamlit
+st.set_page_config(page_title="PCOS Prediction App", page_icon="🩺", layout="wide")  # ✅ Must be the first Streamlit command
+
+# Now import other libraries
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -8,8 +11,6 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 import shap
 import plotly.express as px
-
-st.set_page_config(page_title="PCOS Prediction App", page_icon="🩺", layout="wide")
 
 # Load dataset
 @st.cache_data
