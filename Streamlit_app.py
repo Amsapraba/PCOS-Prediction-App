@@ -89,9 +89,11 @@ sns.barplot(x=importance, y=X.columns, ax=ax, palette="Blues_d")
 ax.set_title("Feature Importance from Random Forest Model")
 st.pyplot(fig)
 
-# SHAP Summary Plot for Model Interpretability
+# SHAP Summary Plot for Model Interpretability (Fixed)
 st.subheader("💡 SHAP Summary Plot (Model Interpretability)")
-shap.summary_plot(shap_values[1], X_train)
+
+# Using the correct shap_values for the binary classification task
+shap.summary_plot(shap_values[1], X_train, feature_names=X.columns)
 st.pyplot(plt)
 
 # Sidebar for User Input Section
