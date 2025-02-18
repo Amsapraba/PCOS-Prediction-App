@@ -1,9 +1,9 @@
 import streamlit as st  # First, import Streamlit
 
-# **Set Page Config FIRST** (this must be before anything else)
+# Make sure st.set_page_config is the very first command in the app
 st.set_page_config(page_title="PCOS Prediction App", page_icon="🩺", layout="wide")
 
-# Import other libraries AFTER st.set_page_config()
+# Now, import other libraries and define your functions
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -22,8 +22,6 @@ def load_data():
     return df
 
 df = load_data()
-
-# Further code...
 
 # Preprocessing function
 def preprocess_data(df):
@@ -59,9 +57,6 @@ explainer = shap.TreeExplainer(model)
 shap_values = explainer.shap_values(X_train)
 
 # Streamlit App Interface
-st.set_page_config(page_title="PCOS Prediction App", page_icon="🩺", layout="wide")
-
-# Header Section
 st.title("🩺 PCOS Prediction and Analysis App")
 st.write("### Use this app to predict PCOS (Polycystic Ovary Syndrome) and analyze key health metrics.")
 
@@ -119,16 +114,16 @@ if st.sidebar.button("🚀 Predict PCOS"):
     st.subheader("🎯 Prediction Result:")
     if prediction == 1:
         st.error("⚠️ PCOS Detected!")
-        st.write("### 🔬 Detailed Analysis and Suggestions:")
+        st.write("### 🔬 Detailed Analysis and Suggestions: ")
         st.write("- PCOS is a hormonal disorder that affects women of reproductive age.")
         st.write("- Symptoms include irregular periods, weight gain, and acne.")
-        st.write("### 📌 Recommendations:")
+        st.write("### 📌 Recommendations: ")
         st.write("- **Balanced Diet** and **Regular Exercise**.")
         st.write("- **Consult a Gynecologist** for professional evaluation.")
         st.write("- Monitor **blood sugar** and **hormonal levels** regularly.")
     else:
         st.success("✅ No PCOS Detected")
-        st.write("### 📊 General Health Report:")
+        st.write("### 📊 General Health Report: ")
         st.write("- Your **BMI**, **weight**, and **height** appear within normal ranges.")
         st.write("- Your **hormone levels** are likely within a healthy range, but consult a doctor for further analysis.")
 
