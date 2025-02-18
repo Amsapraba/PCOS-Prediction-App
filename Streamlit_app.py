@@ -1,7 +1,9 @@
-import streamlit as st  # ✅ First import Streamlit
-st.set_page_config(page_title="PCOS Prediction App", page_icon="🩺", layout="wide")  # ✅ Must be the first Streamlit command
+import streamlit as st  # First, import Streamlit
 
-# Now import other libraries
+# **Set Page Config FIRST** (this must be before anything else)
+st.set_page_config(page_title="PCOS Prediction App", page_icon="🩺", layout="wide")
+
+# Import other libraries AFTER st.set_page_config()
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -20,6 +22,8 @@ def load_data():
     return df
 
 df = load_data()
+
+# Further code...
 
 # Preprocessing function
 def preprocess_data(df):
