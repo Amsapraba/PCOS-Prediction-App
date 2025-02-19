@@ -75,7 +75,7 @@ ensemble_model.fit(X_train, y_train)
 # Evaluate Model
 y_pred = ensemble_model.predict(X_test)
 accuracy = accuracy_score(y_test, y_pred)
-st.write(f'Ensemble Model Accuracy: {accuracy:.4f}')
+st.write(f'🩺 **Ensemble Model Accuracy:** {accuracy:.4f}')
 
 # Streamlit App Interface
 st.title("🩺 PCOS Prediction and Analysis App")
@@ -92,27 +92,31 @@ feature_importance = np.mean([
 fig = px.bar(x=X.columns, y=feature_importance, title="Feature Importance from Ensemble Model")
 st.plotly_chart(fig)
 
-# SHAP Summary Plot
+# SHAP Explanation
 st.subheader("💡 SHAP Summary Plot (Model Interpretability)")
-
 explainer_rf = shap.TreeExplainer(rf_model)
-shap_values_rf = explainer_rf.shap_values(X_train)  # No `[1]` index here!
+shap_values_rf = explainer_rf.shap_values(X_train)
+
+# Ensure SHAP values are correctly indexed
+if isinstance(shap_values_rf, list):  # For classification problems
+    shap_values_rf = shap_values_rf[1]
 
 fig_shap, ax = plt.subplots()
-shap.summary_plot(shap_values_rf, X_train, feature_names=X.columns, show=False)  # Directly use shap_values_rf
+shap.summary_plot(shap_values_rf, X_train, feature_names=X.columns, show=False)
 st.pyplot(fig_shap)
 
 # SHAP Force Plot
 st.subheader("🔍 SHAP Force Plot (Individual Prediction Explanation)")
 idx = st.slider("Select Data Point for Explanation", 0, len(X_test) - 1, 0)
 
-shap_force_html = shap.force_plot(
-    explainer_rf.expected_value,  # No `[1]`
-    shap_values_rf[idx],  # No `[1]`
+# Generate SHAP force plot
+shap_force_html = shap.plots.force(
+    explainer_rf.expected_value[1],  # Fix for SHAP v0.20
+    shap_values_rf[idx],
     X_test.iloc[idx, :]
 )
 
-# Convert SHAP plot to HTML
+# Convert SHAP force plot to HTML
 shap_html_str = f"<head>{shap.getjs()}</head><body>{shap_force_html.html()}</body>"
 components.html(shap_html_str, height=400)
 
