@@ -1,9 +1,11 @@
 streamlit
 pandas
-scikit-learn
-shap
-matplotlib
+numpy
 seaborn
+matplotlib
 plotly
+shap
+scikit-learn
 xgboost
 lightgbm
+base64
