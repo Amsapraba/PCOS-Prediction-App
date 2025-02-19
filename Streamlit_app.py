@@ -7,6 +7,7 @@ import plotly.express as px
 import shap
 import base64
 from io import BytesIO
+import streamlit.components.v1 as components
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 from xgboost import XGBClassifier
@@ -91,20 +92,28 @@ feature_importance = np.mean([
 fig = px.bar(x=X.columns, y=feature_importance, title="Feature Importance from Ensemble Model")
 st.plotly_chart(fig)
 
-# SHAP Explanation
+# SHAP Summary Plot
 st.subheader("💡 SHAP Summary Plot (Model Interpretability)")
 explainer_rf = shap.TreeExplainer(rf_model)
 shap_values_rf = explainer_rf.shap_values(X_train)
 
 fig_shap, ax = plt.subplots()
-shap.summary_plot(shap_values_rf, X_train, feature_names=X.columns, show=False)
+shap.summary_plot(shap_values_rf[1], X_train, feature_names=X.columns, show=False)  # Fix: Use class 1
 st.pyplot(fig_shap)
 
 # SHAP Force Plot
 st.subheader("🔍 SHAP Force Plot (Individual Prediction Explanation)")
 idx = st.slider("Select Data Point for Explanation", 0, len(X_test) - 1, 0)
-shap_force_plot = shap.force_plot(explainer_rf.expected_value, shap_values_rf[idx], X_test.iloc[idx, :], matplotlib=True)
-st.pyplot(plt)
+
+shap_force_html = shap.force_plot(
+    explainer_rf.expected_value[1],  # Fix: Expected value for class 1
+    shap_values_rf[1][idx],  # Fix: SHAP values for class 1
+    X_test.iloc[idx, :]
+)
+
+# Convert SHAP plot to HTML
+shap_html_str = f"<head>{shap.getjs()}</head><body>{shap_force_html.html()}</body>"
+components.html(shap_html_str, height=400)
 
 # Sidebar for User Input
 st.sidebar.header("📌 User Input Parameters")
