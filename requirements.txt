@@ -4,8 +4,6 @@ scikit-learn
 shap
 matplotlib
 seaborn
-plotly.express
+plotly
 xgboost
 lightgbm
-sklearn.preprocessing
-sklearn.metrics
