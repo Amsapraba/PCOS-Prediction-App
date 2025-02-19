@@ -5,3 +5,7 @@ shap
 matplotlib
 seaborn
 plotly
+XGBClassifier
+LGBMClassifier
+StandardScaler
+accuracy_score
