@@ -8,4 +8,4 @@ shap
 scikit-learn
 xgboost
 lightgbm
-streamlit-components
+
