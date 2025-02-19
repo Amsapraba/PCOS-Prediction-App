@@ -54,6 +54,11 @@ rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
 xgb_model = XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42)
 lgbm_model = LGBMClassifier(random_state=42)
 
+# Train Individual Models
+rf_model.fit(X_train, y_train)
+xgb_model.fit(X_train, y_train)
+lgbm_model.fit(X_train, y_train)
+
 # Voting Classifier
 ensemble_model = VotingClassifier(
     estimators=[
