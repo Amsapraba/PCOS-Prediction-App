@@ -51,7 +51,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 
 # Defining Models
 rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
-xgb_model = XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42)
+xgb_model = XGBClassifier(eval_metric='logloss', random_state=42)
 lgbm_model = LGBMClassifier(random_state=42)
 
 # Train Individual Models
@@ -91,18 +91,19 @@ feature_importance = np.mean([
 fig = px.bar(x=X.columns, y=feature_importance, title="Feature Importance from Ensemble Model")
 st.plotly_chart(fig)
 
-# SHAP Explanation using RandomForestClassifier
+# SHAP Explanation
 st.subheader("💡 SHAP Summary Plot (Model Interpretability)")
-explainer = shap.TreeExplainer(rf_model)
-shap_values = explainer.shap_values(X_train)
+explainer_rf = shap.TreeExplainer(rf_model)
+shap_values_rf = explainer_rf.shap_values(X_train)
 
-fig_shap = shap.summary_plot(shap_values, X_train, feature_names=X.columns, show=False)
+fig_shap, ax = plt.subplots()
+shap.summary_plot(shap_values_rf, X_train, feature_names=X.columns, show=False)
 st.pyplot(fig_shap)
 
 # SHAP Force Plot
 st.subheader("🔍 SHAP Force Plot (Individual Prediction Explanation)")
 idx = st.slider("Select Data Point for Explanation", 0, len(X_test) - 1, 0)
-shap.force_plot(explainer.expected_value, shap_values[idx], X_test.iloc[idx, :], matplotlib=True)
+shap_force_plot = shap.force_plot(explainer_rf.expected_value, shap_values_rf[idx], X_test.iloc[idx, :], matplotlib=True)
 st.pyplot(plt)
 
 # Sidebar for User Input
