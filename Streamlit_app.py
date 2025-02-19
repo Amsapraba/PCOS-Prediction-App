@@ -91,18 +91,18 @@ feature_importance = np.mean([
 fig = px.bar(x=X.columns, y=feature_importance, title="Feature Importance from Ensemble Model")
 st.plotly_chart(fig)
 
-# SHAP Explanation
+# SHAP Explanation using RandomForestClassifier
 st.subheader("💡 SHAP Summary Plot (Model Interpretability)")
-explainer = shap.TreeExplainer(ensemble_model)
+explainer = shap.TreeExplainer(rf_model)
 shap_values = explainer.shap_values(X_train)
 
-fig_shap = shap.summary_plot(shap_values[1], X_train, feature_names=X.columns, show=False)
+fig_shap = shap.summary_plot(shap_values, X_train, feature_names=X.columns, show=False)
 st.pyplot(fig_shap)
 
 # SHAP Force Plot
 st.subheader("🔍 SHAP Force Plot (Individual Prediction Explanation)")
 idx = st.slider("Select Data Point for Explanation", 0, len(X_test) - 1, 0)
-shap.force_plot(explainer.expected_value[1], shap_values[1][idx], X_test.iloc[idx, :], matplotlib=True)
+shap.force_plot(explainer.expected_value, shap_values[idx], X_test.iloc[idx, :], matplotlib=True)
 st.pyplot(plt)
 
 # Sidebar for User Input
