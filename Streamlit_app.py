@@ -94,11 +94,12 @@ st.plotly_chart(fig)
 
 # SHAP Summary Plot
 st.subheader("💡 SHAP Summary Plot (Model Interpretability)")
+
 explainer_rf = shap.TreeExplainer(rf_model)
-shap_values_rf = explainer_rf.shap_values(X_train)
+shap_values_rf = explainer_rf.shap_values(X_train)  # No `[1]` index here!
 
 fig_shap, ax = plt.subplots()
-shap.summary_plot(shap_values_rf[1], X_train, feature_names=X.columns, show=False)  # Fix: Use class 1
+shap.summary_plot(shap_values_rf, X_train, feature_names=X.columns, show=False)  # Directly use shap_values_rf
 st.pyplot(fig_shap)
 
 # SHAP Force Plot
@@ -106,8 +107,8 @@ st.subheader("🔍 SHAP Force Plot (Individual Prediction Explanation)")
 idx = st.slider("Select Data Point for Explanation", 0, len(X_test) - 1, 0)
 
 shap_force_html = shap.force_plot(
-    explainer_rf.expected_value[1],  # Fix: Expected value for class 1
-    shap_values_rf[1][idx],  # Fix: SHAP values for class 1
+    explainer_rf.expected_value,  # No `[1]`
+    shap_values_rf[idx],  # No `[1]`
     X_test.iloc[idx, :]
 )
 
