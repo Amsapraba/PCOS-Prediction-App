@@ -4,7 +4,7 @@ scikit-learn
 shap
 matplotlib
 seaborn
-plotly
+plotly.express
 XGBClassifier
 LGBMClassifier
 StandardScaler
