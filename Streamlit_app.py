@@ -1,17 +1,15 @@
 import streamlit as st  # Import Streamlit
+st.set_page_config(page_title="PCOS Prediction App", page_icon="🩺", layout="wide")
+
 import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-import shap
-import plotly.express as px
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
-from imblearn.over_sampling import SMOTE  # Import SMOTE
-
-# Set Streamlit Page Config
-st.set_page_config(page_title="PCOS Prediction App", page_icon="🩺", layout="wide")
+import shap
+import plotly.express as px
 
 # Load dataset
 @st.cache_data
@@ -44,14 +42,10 @@ def preprocess_data(df):
 
 X, y, scaler = preprocess_data(df)
 
-# **SMOTE to Balance the Data**
-smote = SMOTE(random_state=42)
-X_resampled, y_resampled = smote.fit_resample(X, y)
-
 # Split data
-X_train, X_test, y_train, y_test = train_test_split(X_resampled, y_resampled, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Train Random Forest model with class weights
+# Train Random Forest with class weighting
 model = RandomForestClassifier(n_estimators=100, class_weight="balanced", random_state=42)
 model.fit(X_train, y_train)
 
@@ -66,10 +60,10 @@ st.write("### Use this app to predict PCOS (Polycystic Ovary Syndrome) and analy
 # Interactive Graphs Section
 st.subheader("📊 Interactive Data Visualizations")
 
-# Graph 1: Target Variable Distribution (After Balancing)
+# Graph 1: Target Variable Distribution
 fig, ax = plt.subplots(figsize=(8, 6))
-sns.countplot(x=y_resampled, ax=ax, palette="viridis")
-ax.set_title("Balanced Distribution of PCOS Cases")
+sns.countplot(x='PCOS (Y/N)', data=df, hue='PCOS (Y/N)', legend=False, palette='viridis')
+ax.set_title("Distribution of PCOS Cases")
 st.pyplot(fig)
 
 # Graph 2: Correlation Heatmap
@@ -78,7 +72,7 @@ corr = df[numeric_cols].corr()
 
 st.subheader("🔍 Feature Correlation Heatmap")
 fig, ax = plt.subplots(figsize=(10, 8))
-sns.heatmap(corr, annot=True, cmap="coolwarm", ax=ax, linewidths=0.5, fmt=".2f")
+sns.heatmap(corr, annot=True, cmap='coolwarm', ax=ax, linewidths=0.5, fmt='.2f')
 ax.set_title("Correlation Matrix of Features")
 st.pyplot(fig)
 
@@ -86,7 +80,7 @@ st.pyplot(fig)
 st.subheader("📈 Feature Importance from Random Forest")
 importance = model.feature_importances_
 fig, ax = plt.subplots(figsize=(8, 6))
-sns.barplot(x=importance, y=X.columns, ax=ax, hue=X.columns, dodge=False, palette="Blues")
+sns.barplot(x=importance, y=X.columns, hue=X.columns, legend=False, palette="Blues_d")
 ax.set_title("Feature Importance from Random Forest Model")
 st.pyplot(fig)
 
