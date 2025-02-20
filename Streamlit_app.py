@@ -1,4 +1,9 @@
-import streamlit as st
+import streamlit as st  # First, import Streamlit
+
+# Make sure st.set_page_config is the very first command in the app
+st.set_page_config(page_title="PCOS Prediction App", page_icon="🩺", layout="wide")
+
+# Now, import other libraries and define your functions
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -9,14 +14,11 @@ from sklearn.preprocessing import StandardScaler
 import shap
 import plotly.express as px
 
-# Set Streamlit page config
-st.set_page_config(page_title="PCOS Prediction App", page_icon="🩺", layout="wide")
-
-# Load dataset function with caching
+# Load dataset
 @st.cache_data
 def load_data():
     df = pd.read_csv("PCOS_data.csv")
-    df.columns = df.columns.str.strip()  # Remove extra spaces in column names
+    df.columns = df.columns.str.strip()  # Remove spaces from column names
     return df
 
 df = load_data()
@@ -41,10 +43,9 @@ def preprocess_data(df):
 
     return pd.DataFrame(X_scaled, columns=X.columns), y, scaler
 
-# Process data
 X, y, scaler = preprocess_data(df)
 
-# Split into training and testing sets
+# Split data
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Train Random Forest model
@@ -55,26 +56,20 @@ model.fit(X_train, y_train)
 explainer = shap.TreeExplainer(model)
 shap_values = explainer.shap_values(X_train)
 
-# Fix SHAP class mismatch
-if isinstance(shap_values, list) and len(shap_values) > 1:
-    shap_values_class = shap_values[1]  # Use class 1 values if available
-else:
-    shap_values_class = shap_values[0]  # Use first class if binary
-
 # Streamlit App Interface
 st.title("🩺 PCOS Prediction and Analysis App")
-st.write("### Predict PCOS and analyze health metrics.")
+st.write("### Use this app to predict PCOS (Polycystic Ovary Syndrome) and analyze key health metrics.")
 
-# 📊 Data Visualization Section
+# Interactive Graphs Section
 st.subheader("📊 Interactive Data Visualizations")
 
-# Distribution of PCOS Cases
+# Graph 1: Target Variable Distribution (Fixed Seaborn Warning)
 fig, ax = plt.subplots(figsize=(8, 6))
-sns.countplot(x='PCOS (Y/N)', data=df, ax=ax, palette='viridis')
+sns.countplot(x='PCOS (Y/N)', data=df, ax=ax, hue='PCOS (Y/N)', palette='viridis', legend=False)
 ax.set_title("Distribution of PCOS Cases")
 st.pyplot(fig)
 
-# Correlation Heatmap
+# Graph 2: Correlation Heatmap
 numeric_cols = df.select_dtypes(include=[np.number]).columns
 corr = df[numeric_cols].corr()
 
@@ -84,26 +79,31 @@ sns.heatmap(corr, annot=True, cmap='coolwarm', ax=ax, linewidths=0.5, fmt='.2f')
 ax.set_title("Correlation Matrix of Features")
 st.pyplot(fig)
 
-# Feature Importance using Random Forest
+# Graph 3: Feature Importance using Random Forest (Fixed Seaborn Warning)
 st.subheader("📈 Feature Importance from Random Forest")
 importance = model.feature_importances_
 fig, ax = plt.subplots(figsize=(8, 6))
-sns.barplot(x=importance, y=X.columns, ax=ax, palette="Blues_d")
+sns.barplot(x=importance, y=X.columns, ax=ax, hue=X.columns, palette="Blues_d", legend=False)
 ax.set_title("Feature Importance from Random Forest Model")
 st.pyplot(fig)
 
-# SHAP Summary Plot
+# SHAP Explainer (Fixed SHAP Mismatch Issue)
 st.subheader("💡 SHAP Summary Plot (Model Interpretability)")
 
-if shap_values_class.shape[1] != X_train.shape[1]:
-    st.error(f"⚠️ SHAP feature mismatch: SHAP={shap_values_class.shape[1]}, X_train={X_train.shape[1]}")
+# Ensure correct SHAP dimension
+if isinstance(shap_values, list) and len(shap_values) > 1:
+    shap_values_class_1 = shap_values[1]  # SHAP values for positive class
 else:
-    shap.summary_plot(shap_values_class, X_train, feature_names=X.columns)
+    shap_values_class_1 = shap_values  # For single-class SHAP models
+
+if shap_values_class_1.shape[1] != X_train.shape[1]:
+    st.error(f"Mismatch between SHAP values and feature dimensions: SHAP values have {shap_values_class_1.shape[1]} features, but X_train has {X_train.shape[1]} features.")
+else:
+    shap.summary_plot(shap_values_class_1, X_train, feature_names=X.columns)
     st.pyplot(plt)
 
-# 📌 Sidebar: User Input Section
+# Sidebar for User Input Section
 st.sidebar.header("📌 User Input Parameters")
-
 weight = st.sidebar.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=60.0, step=0.1)
 height = st.sidebar.number_input("Height (cm)", min_value=100.0, max_value=250.0, value=160.0, step=0.1)
 bmi = weight / ((height / 100) ** 2)
@@ -115,7 +115,6 @@ for col in X.columns:
     user_input[col] = st.sidebar.slider(f"{col} (Range)", min_value=round(float(X[col].min()), 2),
                                        max_value=round(float(X[col].max()), 2), value=float(X[col].mean()), step=0.1)
 
-# 🚀 Predict PCOS Button
 if st.sidebar.button("🚀 Predict PCOS"):
     input_df = pd.DataFrame([user_input])
     input_df[X.columns] = scaler.transform(input_df[X.columns])
@@ -137,16 +136,14 @@ if st.sidebar.button("🚀 Predict PCOS"):
         st.write("- Your **BMI**, **weight**, and **height** appear within normal ranges.")
         st.write("- Your **hormone levels** are likely within a healthy range, but consult a doctor for further analysis.")
 
-# 📝 Footer
 st.markdown(
     """
     ---
-    📝 This app was created as part of a PCOS prediction project. 
-    For inquiries, contact [Email](mailto:your-email@example.com).
+    📝 This app was created as part of a personal project to predict and analyze PCOS. 
+    For any questions, contact [Email](mailto:your-email@example.com).
     """
 )
 
-# Styling
 st.markdown(
     """
     <style>
