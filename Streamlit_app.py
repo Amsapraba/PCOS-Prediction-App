@@ -6,13 +6,15 @@ import seaborn as sns
 import plotly.express as px
 import shap
 import pickle
+import os
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.metrics import accuracy_score, classification_report
 from imblearn.over_sampling import SMOTE
 from xgboost import XGBClassifier
 from lightgbm import LGBMClassifier
+from lime.lime_tabular import LimeTabularExplainer
 
 # Page Configuration
 st.set_page_config(page_title="PCOS Prediction Tool", layout="wide")
@@ -64,65 +66,74 @@ elif menu == "Model Training":
         X_train = scaler.fit_transform(X_train)
         X_test = scaler.transform(X_test)
         
-        # Model Training
-        model = RandomForestClassifier()
-        model.fit(X_train, y_train)
+        # Model Training with Ensemble Learning
+        rf = RandomForestClassifier()
+        xgb = XGBClassifier()
+        lgbm = LGBMClassifier()
         
-        y_pred = model.predict(X_test)
-        accuracy = accuracy_score(y_test, y_pred)
+        rf.fit(X_train, y_train)
+        xgb.fit(X_train, y_train)
+        lgbm.fit(X_train, y_train)
         
-        st.write(f"Model Accuracy: {accuracy:.2f}")
-        st.write("Classification Report:")
-        st.text(classification_report(y_test, y_pred))
+        y_pred_rf = rf.predict(X_test)
+        y_pred_xgb = xgb.predict(X_test)
+        y_pred_lgbm = lgbm.predict(X_test)
         
-        # Save the model
+        accuracy_rf = accuracy_score(y_test, y_pred_rf)
+        accuracy_xgb = accuracy_score(y_test, y_pred_xgb)
+        accuracy_lgbm = accuracy_score(y_test, y_pred_lgbm)
+        
+        st.write(f"Random Forest Accuracy: {accuracy_rf:.2f}")
+        st.write(f"XGBoost Accuracy: {accuracy_xgb:.2f}")
+        st.write(f"LightGBM Accuracy: {accuracy_lgbm:.2f}")
+        
+        # Save the best model (based on accuracy)
+        best_model = max([(rf, accuracy_rf), (xgb, accuracy_xgb), (lgbm, accuracy_lgbm)], key=lambda x: x[1])[0]
         with open("pcos_model.pkl", "wb") as f:
-            pickle.dump(model, f)
+            pickle.dump(best_model, f)
 
 elif menu == "Prediction":
     st.header("PCOS Prediction")
-    with open("pcos_model.pkl", "rb") as f:
-        model = pickle.load(f)
-    
-    st.write("Enter patient details to predict PCOS")
-    age = st.slider("Age", 15, 50, 25)
-    bmi = st.slider("BMI", 15, 40, 25)
-    waist_hip_ratio = st.slider("Waist-Hip Ratio", 0.6, 1.2, 0.85)
-    
-    input_data = np.array([[age, bmi, waist_hip_ratio]])
-    prediction = model.predict(input_data)
-    
-    st.write("Prediction Result:")
-    st.write("PCOS Positive" if prediction[0] == 1 else "PCOS Negative")
-
-elif menu == "Insights":
-    st.header("Explainable AI Insights")
-    st.write("Feature importance and explainability using SHAP")
-    
-    with open("pcos_model.pkl", "rb") as f:
-        model = pickle.load(f)
-    
-    explainer = shap.TreeExplainer(model)
-    X_sample = X_test[:10]
-    shap_values = explainer.shap_values(X_sample)
-    
-    fig, ax = plt.subplots()
-    shap.summary_plot(shap_values, X_sample, show=False)
-    st.pyplot(fig)
+    if os.path.exists("pcos_model.pkl"):
+        with open("pcos_model.pkl", "rb") as f:
+            model = pickle.load(f)
+        
+        st.write("Enter patient details to predict PCOS")
+        age = st.slider("Age", 15, 50, 25)
+        bmi = st.slider("BMI", 15, 40, 25)
+        waist_hip_ratio = st.slider("Waist-Hip Ratio", 0.6, 1.2, 0.85)
+        
+        input_data = np.array([[age, bmi, waist_hip_ratio]])
+        prediction = model.predict(input_data)
+        
+        st.write("Prediction Result:")
+        st.write("PCOS Positive" if prediction[0] == 1 else "PCOS Negative")
+    else:
+        st.error("Model file not found. Please train the model first in the 'Model Training' section.")
 
 elif menu == "PCOS Quiz":
     st.header("Take the PCOS Risk Quiz")
     st.write("Answer the following questions to assess potential risk factors.")
     
-    q1 = st.radio("Do you have irregular menstrual cycles?", ["Yes", "No"])
-    q2 = st.radio("Do you experience excessive hair growth?", ["Yes", "No"])
-    q3 = st.radio("Do you have acne or oily skin?", ["Yes", "No"])
+    questions = [
+        "Do you have irregular menstrual cycles?",
+        "Do you experience excessive hair growth?",
+        "Do you have acne or oily skin?",
+        "Do you frequently feel fatigued or have mood swings?",
+        "Do you experience sudden weight gain or difficulty losing weight?",
+        "Do you have dark skin patches (Acanthosis Nigricans)?",
+        "Does PCOS run in your family?"
+    ]
     
-    risk_score = sum([q1 == "Yes", q2 == "Yes", q3 == "Yes"])
-    if risk_score >= 2:
-        st.write("You may be at risk for PCOS. Consider consulting a doctor.")
+    responses = [st.radio(q, ["Yes", "No"]) for q in questions]
+    risk_score = sum([resp == "Yes" for resp in responses])
+    
+    if risk_score >= 4:
+        st.write("You may be at high risk for PCOS. Consider consulting a doctor and maintaining a healthy lifestyle.")
+    elif 2 <= risk_score < 4:
+        st.write("You have moderate risk for PCOS. Focus on lifestyle management, exercise, and a balanced diet.")
     else:
-        st.write("Your risk for PCOS appears low based on this quiz.")
+        st.write("Your risk for PCOS appears low based on this quiz. Keep maintaining a healthy lifestyle!")
 
 elif menu == "About":
     st.header("About This Project")
