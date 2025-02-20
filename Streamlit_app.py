@@ -1,9 +1,4 @@
-import streamlit as st  # First, import Streamlit
-
-# Make sure st.set_page_config is the very first command in the app
-st.set_page_config(page_title="PCOS Prediction App", page_icon="🩺", layout="wide")
-
-# Now, import other libraries and define your functions
+import streamlit as st  
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -13,6 +8,9 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 import shap
 import plotly.express as px
+
+# Streamlit Config
+st.set_page_config(page_title="PCOS Prediction App", page_icon="🩺", layout="wide")
 
 # Load dataset
 @st.cache_data
@@ -56,6 +54,16 @@ model.fit(X_train, y_train)
 explainer = shap.TreeExplainer(model)
 shap_values = explainer.shap_values(X_train)
 
+# Check SHAP Values Shape
+st.write("🔍 SHAP values shape:", np.array(shap_values).shape)
+
+# Ensure correct SHAP values extraction
+shap_values_array = np.array(shap_values)
+if len(shap_values_array.shape) == 3:  # Multi-class output case
+    shap_values_class_1 = shap_values_array[1]  # Select class 1
+else:
+    shap_values_class_1 = shap_values_array
+
 # Streamlit App Interface
 st.title("🩺 PCOS Prediction and Analysis App")
 st.write("### Use this app to predict PCOS (Polycystic Ovary Syndrome) and analyze key health metrics.")
@@ -87,16 +95,13 @@ sns.barplot(x=importance, y=X.columns, ax=ax, palette="Blues_d")
 ax.set_title("Feature Importance from Random Forest Model")
 st.pyplot(fig)
 
-# SHAP Explainer (debugging approach)
+# SHAP Explainer Plot
 st.subheader("💡 SHAP Summary Plot (Model Interpretability)")
-
-shap_values_class_1 = shap_values[1]
-
-if shap_values_class_1.shape[1] != X_train.shape[1]:
-    st.error(f"Mismatch between SHAP values and feature dimensions: SHAP values have {shap_values_class_1.shape[1]} features, but X_train has {X_train.shape[1]} features.")
-else:
+if shap_values_class_1.shape[1] == X_train.shape[1]:  
     shap.summary_plot(shap_values_class_1, X_train, feature_names=X.columns)
     st.pyplot(plt)
+else:
+    st.error(f"⚠️ SHAP mismatch: SHAP features={shap_values_class_1.shape[1]}, X_train features={X_train.shape[1]}")
 
 # Sidebar for User Input Section
 st.sidebar.header("📌 User Input Parameters")
