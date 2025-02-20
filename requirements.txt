@@ -4,9 +4,9 @@ numpy
 matplotlib
 seaborn
 plotly
-scikit-learn
-imblearn
 shap
+pickle5
+scikit-learn
+imbalanced-learn
 xgboost
 lightgbm
-lime
