@@ -1,8 +1,9 @@
 streamlit
 pandas
 numpy
-seaborn
-matplotlib
 scikit-learn
+matplotlib
+seaborn
 shap
 plotly
+imbalanced-learn  # Added this for SMOTE
