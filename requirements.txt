@@ -1,9 +1,12 @@
 streamlit
 pandas
 numpy
-scikit-learn
 matplotlib
 seaborn
-shap
 plotly
-imbalanced-learn  # Added this for SMOTE
+scikit-learn
+imblearn
+shap
+xgboost
+lightgbm
+lime
