@@ -5,8 +5,9 @@ matplotlib
 seaborn
 plotly
 shap
-pickle5
+pickle5  # if using pickle module, some environments require pickle5
 scikit-learn
 imbalanced-learn
 xgboost
 lightgbm
+lime
