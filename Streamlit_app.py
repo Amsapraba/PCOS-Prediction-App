@@ -1,4 +1,4 @@
-import streamlit as st  # Import Streamlit
+import streamlit as st
 st.set_page_config(page_title="PCOS Prediction App", page_icon="🩺", layout="wide")
 
 import pandas as pd
@@ -9,32 +9,28 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 import shap
-import plotly.express as px
 
 # Load dataset
 @st.cache_data
 def load_data():
     df = pd.read_csv("PCOS_data.csv")
-    df.columns = df.columns.str.strip()  # Remove spaces from column names
+    df.columns = df.columns.str.strip()
     return df
 
 df = load_data()
 
-# Preprocessing function
+# Preprocess data
 def preprocess_data(df):
     required_columns = [col for col in df.columns if "beta-HCG" in col or "AMH" in col]
-
     if len(required_columns) < 3:
-        raise KeyError(f"Missing required columns: Expected at least 3, found {len(required_columns)}")
+        raise KeyError("Expected at least 3 features for prediction.")
 
     X = df[required_columns]
-    y = df["PCOS (Y/N)"].astype(int)  # Convert target column to numeric
+    y = df["PCOS (Y/N)"].astype(int)
 
-    # Handle missing values
     X = X.apply(pd.to_numeric, errors='coerce')
     X.fillna(X.median(), inplace=True)
 
-    # Standardize features
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 
@@ -53,55 +49,41 @@ model.fit(X_train, y_train)
 explainer = shap.TreeExplainer(model)
 shap_values = explainer.shap_values(X_train)
 
-# Streamlit App Interface
-st.title("🩺 PCOS Prediction and Analysis App")
-st.write("### Use this app to predict PCOS (Polycystic Ovary Syndrome) and analyze key health metrics.")
+# Streamlit App
+st.title("🩺 PCOS Prediction and Analysis")
+st.subheader("📊 Data Visualization")
 
-# Interactive Graphs Section
-st.subheader("📊 Interactive Data Visualizations")
-
-# Graph 1: Target Variable Distribution
+# Graph: PCOS Distribution
 fig, ax = plt.subplots(figsize=(8, 6))
 sns.countplot(x='PCOS (Y/N)', data=df, hue='PCOS (Y/N)', legend=False, palette='viridis')
 ax.set_title("Distribution of PCOS Cases")
 st.pyplot(fig)
 
-# Graph 2: Correlation Heatmap
-numeric_cols = df.select_dtypes(include=[np.number]).columns
-corr = df[numeric_cols].corr()
-
-st.subheader("🔍 Feature Correlation Heatmap")
-fig, ax = plt.subplots(figsize=(10, 8))
-sns.heatmap(corr, annot=True, cmap='coolwarm', ax=ax, linewidths=0.5, fmt='.2f')
-ax.set_title("Correlation Matrix of Features")
-st.pyplot(fig)
-
-# Graph 3: Feature Importance using Random Forest
-st.subheader("📈 Feature Importance from Random Forest")
+# Graph: Feature Importance
+st.subheader("📈 Feature Importance")
 importance = model.feature_importances_
 fig, ax = plt.subplots(figsize=(8, 6))
 sns.barplot(x=importance, y=X.columns, hue=X.columns, legend=False, palette="Blues_d")
-ax.set_title("Feature Importance from Random Forest Model")
+ax.set_title("Feature Importance from Random Forest")
 st.pyplot(fig)
 
-# SHAP Explainer (debugging approach)
-st.subheader("💡 SHAP Summary Plot (Model Interpretability)")
-
+# SHAP Summary Plot
+st.subheader("💡 SHAP Analysis")
 shap_values_class_1 = shap_values[1]
 
 if shap_values_class_1.shape[1] != X_train.shape[1]:
-    st.error(f"Mismatch between SHAP values and feature dimensions: SHAP values have {shap_values_class_1.shape[1]} features, but X_train has {X_train.shape[1]} features.")
+    st.error(f"Mismatch between SHAP values ({shap_values_class_1.shape[1]}) and features ({X_train.shape[1]}).")
 else:
     shap.summary_plot(shap_values_class_1, X_train, feature_names=X.columns)
     st.pyplot(plt)
 
-# Sidebar for User Input Section
-st.sidebar.header("📌 User Input Parameters")
-weight = st.sidebar.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=60.0, step=0.1)
-height = st.sidebar.number_input("Height (cm)", min_value=100.0, max_value=250.0, value=160.0, step=0.1)
+# Sidebar for User Input
+st.sidebar.header("📌 User Input")
+weight = st.sidebar.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=60.0)
+height = st.sidebar.number_input("Height (cm)", min_value=100.0, max_value=250.0, value=160.0)
 bmi = weight / ((height / 100) ** 2)
 
-st.sidebar.write(f"📊 **Calculated BMI**: {bmi:.2f}")
+st.sidebar.write(f"📊 **BMI**: {bmi:.2f}")
 
 user_input = {}
 for col in X.columns:
@@ -116,39 +98,8 @@ if st.sidebar.button("🚀 Predict PCOS"):
     st.subheader("🎯 Prediction Result:")
     if prediction == 1:
         st.error("⚠️ PCOS Detected!")
-        st.write("### 🔬 Detailed Analysis and Suggestions: ")
-        st.write("- PCOS is a hormonal disorder that affects women of reproductive age.")
-        st.write("- Symptoms include irregular periods, weight gain, and acne.")
-        st.write("### 📌 Recommendations: ")
-        st.write("- **Balanced Diet** and **Regular Exercise**.")
-        st.write("- **Consult a Gynecologist** for professional evaluation.")
-        st.write("- Monitor **blood sugar** and **hormonal levels** regularly.")
     else:
         st.success("✅ No PCOS Detected")
-        st.write("### 📊 General Health Report: ")
-        st.write("- Your **BMI**, **weight**, and **height** appear within normal ranges.")
-        st.write("- Your **hormone levels** are likely within a healthy range, but consult a doctor for further analysis.")
 
-st.markdown(
-    """
-    ---
-    📝 This app was created as part of a personal project to predict and analyze PCOS. 
-    For any questions, contact [Email](mailto:your-email@example.com).
-    """
-)
-
-st.markdown(
-    """
-    <style>
-    .streamlit-expanderHeader {
-        font-size: 18px;
-        font-weight: bold;
-    }
-    .css-1aehpv7 {
-        color: #3d7e8c;
-        font-family: 'Arial', sans-serif;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+st.markdown("---")
+st.markdown("📌 Created for Smartathon Hackathon")
