@@ -75,3 +75,21 @@ if uploaded_file:
             prediction = model.predict(input_df)[0]
             result = "PCOS Detected" if prediction == 1 else "No PCOS Detected"
             st.write(f"### Prediction: {result}")
+        
+        # Quiz Section
+        st.write("### PCOS Risk Assessment Quiz")
+        
+        q1 = st.selectbox("Do you experience irregular periods?", ["No", "Sometimes", "Yes"])
+        q2 = st.selectbox("Do you have excessive hair growth (hirsutism)?", ["No", "Mild", "Severe"])
+        q3 = st.selectbox("Do you experience frequent acne or oily skin?", ["No", "Sometimes", "Yes"])
+        q4 = st.selectbox("Have you noticed unexplained weight gain?", ["No", "Mild", "Significant"])
+        q5 = st.selectbox("Do you frequently consume processed or high-sugar foods?", ["No", "Sometimes", "Yes"])
+        
+        if st.button("Check PCOS Proneness"):
+            score = sum([q1 == "Yes", q2 == "Severe", q3 == "Yes", q4 == "Significant", q5 == "Yes"])
+            if score >= 3:
+                st.write("### High Risk: You might be prone to PCOS. Consider consulting a doctor.")
+            elif score == 2:
+                st.write("### Moderate Risk: You may have some risk factors. Keep monitoring your health.")
+            else:
+                st.write("### Low Risk: You have minimal risk of PCOS.")
