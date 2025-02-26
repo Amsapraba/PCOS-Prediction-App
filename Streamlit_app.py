@@ -1,140 +1,101 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-import plotly.express as px
-import shap
-import pickle
-import os
+import joblib
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.metrics import accuracy_score, classification_report
-from imblearn.over_sampling import SMOTE
-from xgboost import XGBClassifier
-from lightgbm import LGBMClassifier
-from lime.lime_tabular import LimeTabularExplainer
+import base64
+from fpdf import FPDF
 
-# Page Configuration
-st.set_page_config(page_title="PCOS Prediction Tool", layout="wide")
-st.title("🩺 PCOS Prediction Tool")
+# Load trained model
+model = joblib.load("pcos_model.pkl")
 
-# Sidebar Navigation
-menu = st.sidebar.radio("Navigate to:", ["Home", "Upload Data", "Model Training", "Prediction", "Insights", "PCOS Quiz", "About"])
+# Function to generate PDF report
+def generate_pdf(prediction, recommendations):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", style='', size=14)
+    pdf.cell(200, 10, "PCOS Prediction Report", ln=True, align='C')
+    pdf.ln(10)
+    pdf.cell(200, 10, f"Prediction: {prediction}", ln=True)
+    pdf.ln(10)
+    pdf.multi_cell(0, 10, f"Recommendations: {recommendations}")
+    pdf_filename = "pcos_report.pdf"
+    pdf.output(pdf_filename)
+    return pdf_filename
 
-def load_data(file):
-    df = pd.read_csv(file)
-    return df
+# Streamlit UI
+st.set_page_config(page_title="PCOS Prediction", layout="wide")
+st.title("🌸 PCOS Prediction App")
 
-if menu == "Home":
-    st.header("Welcome to the PCOS Prediction Tool")
-    st.write("This tool helps predict PCOS based on non-invasive features using Machine Learning.")
+# Sidebar Virtual Assistant
+def virtual_assistant():
+    st.sidebar.title("👩‍⚕️ Virtual Assistant")
+    st.sidebar.write("Hey, how may I assist you?")
 
-elif menu == "Upload Data":
-    st.header("Upload PCOS Dataset")
-    uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
-    if uploaded_file is not None:
-        df = load_data(uploaded_file)
-        st.write("Preview of Uploaded Data:")
-        st.dataframe(df.head())
+virtual_assistant()
 
-elif menu == "Model Training":
-    st.header("Train Machine Learning Model")
-    if uploaded_file is not None:
-        df = load_data(uploaded_file)
-        X = df.drop(columns=["PCOS"])
-        y = df["PCOS"]
-        
-        # Handling missing values
-        X.fillna(X.mean(), inplace=True)
-        
-        # Encoding categorical variables
-        le = LabelEncoder()
-        for col in X.select_dtypes(include=['object']).columns:
-            X[col] = le.fit_transform(X[col])
-        
-        # Splitting data
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-        
-        # Oversampling using SMOTE
-        smote = SMOTE()
-        X_train, y_train = smote.fit_resample(X_train, y_train)
-        
-        # Scaling
-        scaler = StandardScaler()
-        X_train = scaler.fit_transform(X_train)
-        X_test = scaler.transform(X_test)
-        
-        # Model Training with Ensemble Learning
-        rf = RandomForestClassifier()
-        xgb = XGBClassifier()
-        lgbm = LGBMClassifier()
-        
-        rf.fit(X_train, y_train)
-        xgb.fit(X_train, y_train)
-        lgbm.fit(X_train, y_train)
-        
-        y_pred_rf = rf.predict(X_test)
-        y_pred_xgb = xgb.predict(X_test)
-        y_pred_lgbm = lgbm.predict(X_test)
-        
-        accuracy_rf = accuracy_score(y_test, y_pred_rf)
-        accuracy_xgb = accuracy_score(y_test, y_pred_xgb)
-        accuracy_lgbm = accuracy_score(y_test, y_pred_lgbm)
-        
-        st.write(f"Random Forest Accuracy: {accuracy_rf:.2f}")
-        st.write(f"XGBoost Accuracy: {accuracy_xgb:.2f}")
-        st.write(f"LightGBM Accuracy: {accuracy_lgbm:.2f}")
-        
-        # Save the best model (based on accuracy)
-        best_model = max([(rf, accuracy_rf), (xgb, accuracy_xgb), (lgbm, accuracy_lgbm)], key=lambda x: x[1])[0]
-        with open("pcos_model.pkl", "wb") as f:
-            pickle.dump(best_model, f)
+# Dashboard Navigation
+menu = ["Home", "Predict PCOS", "Health Games", "Quiz", "Generate Report"]
+choice = st.sidebar.radio("Navigation", menu)
 
-elif menu == "Prediction":
-    st.header("PCOS Prediction")
-    if os.path.exists("pcos_model.pkl"):
-        with open("pcos_model.pkl", "rb") as f:
-            model = pickle.load(f)
-        
-        st.write("Enter patient details to predict PCOS")
-        age = st.slider("Age", 15, 50, 25)
-        bmi = st.slider("BMI", 15, 40, 25)
-        waist_hip_ratio = st.slider("Waist-Hip Ratio", 0.6, 1.2, 0.85)
-        
-        input_data = np.array([[age, bmi, waist_hip_ratio]])
-        prediction = model.predict(input_data)
-        
-        st.write("Prediction Result:")
-        st.write("PCOS Positive" if prediction[0] == 1 else "PCOS Negative")
-    else:
-        st.error("Model file not found. Please train the model first in the 'Model Training' section.")
+if choice == "Home":
+    st.header("Welcome to the PCOS Prediction App!")
+    st.write("This AI-powered tool helps in early detection of PCOS using health parameters.")
 
-elif menu == "PCOS Quiz":
-    st.header("Take the PCOS Risk Quiz")
-    st.write("Answer the following questions to assess potential risk factors.")
+elif choice == "Predict PCOS":
+    st.header("🔍 PCOS Prediction")
     
-    questions = [
-        "Do you have irregular menstrual cycles?",
-        "Do you experience excessive hair growth?",
-        "Do you have acne or oily skin?",
-        "Do you frequently feel fatigued or have mood swings?",
-        "Do you experience sudden weight gain or difficulty losing weight?",
-        "Do you have dark skin patches (Acanthosis Nigricans)?",
-        "Does PCOS run in your family?"
-    ]
+    # User Inputs
+    age = st.number_input("Age", min_value=15, max_value=50, value=25)
+    bmi = st.number_input("BMI", min_value=10.0, max_value=50.0, value=22.0)
+    cycle_length = st.number_input("Cycle Length (days)", min_value=15, max_value=60, value=28)
+    irregular_periods = st.radio("Irregular Periods?", ["Yes", "No"])
+    weight_gain = st.radio("Sudden Weight Gain?", ["Yes", "No"])
+    hair_growth = st.radio("Excessive Hair Growth?", ["Yes", "No"])
+    acne = st.radio("Frequent Acne Issues?", ["Yes", "No"])
     
-    responses = [st.radio(q, ["Yes", "No"]) for q in questions]
-    risk_score = sum([resp == "Yes" for resp in responses])
+    # Convert categorical to numerical
+    inputs = [age, bmi, cycle_length, int(irregular_periods == "Yes"), int(weight_gain == "Yes"), int(hair_growth == "Yes"), int(acne == "Yes")]
     
-    if risk_score >= 4:
-        st.write("You may be at high risk for PCOS. Consider consulting a doctor and maintaining a healthy lifestyle.")
-    elif 2 <= risk_score < 4:
-        st.write("You have moderate risk for PCOS. Focus on lifestyle management, exercise, and a balanced diet.")
-    else:
-        st.write("Your risk for PCOS appears low based on this quiz. Keep maintaining a healthy lifestyle!")
+    if st.button("Predict Now"):
+        prediction = model.predict([inputs])
+        if prediction[0] == 1:
+            st.error("⚠️ High risk of PCOS detected. Consult a doctor.")
+            recommendations = "Maintain a balanced diet, exercise regularly, and consult a gynecologist."
+        else:
+            st.success("✅ You are healthy! Keep maintaining a good lifestyle.")
+            recommendations = "Continue with a healthy diet and regular check-ups."
+        
+        # Generate PDF Report
+        pdf_file = generate_pdf("High Risk" if prediction[0] == 1 else "Healthy", recommendations)
+        with open(pdf_file, "rb") as f:
+            pdf_data = f.read()
+        b64 = base64.b64encode(pdf_data).decode()
+        href = f'<a href="data:application/octet-stream;base64,{b64}" download="{pdf_file}">📄 Download Report</a>'
+        st.markdown(href, unsafe_allow_html=True)
 
-elif menu == "About":
-    st.header("About This Project")
-    st.write("This PCOS Prediction Tool was built using Machine Learning to assist in non-invasive PCOS detection.")
+elif choice == "Health Games":
+    st.header("🎮 Fun Health Games")
+    st.write("Coming Soon! Stay tuned for interactive games to improve health awareness.")
+
+elif choice == "Quiz":
+    st.header("🧠 Health Awareness Quiz")
+    question = "What lifestyle change helps in managing PCOS?"
+    options = ["A. Eating junk food", "B. Regular exercise", "C. Skipping meals"]
+    answer = st.radio(question, options)
+    if st.button("Submit Answer"):
+        if answer == "B. Regular exercise":
+            st.success("Correct! Regular exercise helps in PCOS management.")
+        else:
+            st.error("Incorrect! Try again.")
+
+elif choice == "Generate Report":
+    st.header("📄 Generate Personalized Report")
+    st.write("Click below to generate your instant PDF health report.")
+    if st.button("Generate Report Now"):
+        pdf_file = generate_pdf("Healthy", "Maintain a good lifestyle")
+        with open(pdf_file, "rb") as f:
+            pdf_data = f.read()
+        b64 = base64.b64encode(pdf_data).decode()
+        href = f'<a href="data:application/octet-stream;base64,{b64}" download="{pdf_file}">📄 Download Report</a>'
+        st.markdown(href, unsafe_allow_html=True)
