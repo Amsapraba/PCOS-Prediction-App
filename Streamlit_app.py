@@ -11,15 +11,13 @@ from sklearn.preprocessing import LabelEncoder
 st.title("PCOS Prediction App")
 
 # Sidebar navigation
-menu = st.sidebar.radio("Navigation", ["Home", "PCOS Prediction", "Quiz", "Health Recipes"])
+menu = st.sidebar.radio("Navigation", ["Home", "PCOS Prediction", "Quiz", "Health Recipes", "Games"])
 
 if menu == "Home":
-    st.image("https://www.istockphoto.com/video/polycystic-ovarian-syndrome-2d-animation-gm1358282384-431958796?utm_campaign=srp_photos_top&utm_content=https%3A%2F%2Funsplash.com%2Fs%2Fphotos%2Fpcos&utm_medium=affiliate&utm_source=unsplash&utm_term=pcos%3A%3Avideo-affiliates%3Aexperiment.jpg", use_column_width=True)
     st.write("## Hey there! What’s up? Click on any of the features in the dashboard to get started.")
     st.write("Use this tool to predict PCOS risk, take a quiz to assess symptoms, and explore healthy recipes!")
 
 elif menu == "PCOS Prediction":
-    st.image("https://www.example.com/pcos_prediction.jpg", use_column_width=True)
     # Upload dataset
     uploaded_file = st.file_uploader("Upload your PCOS dataset (CSV)", type=["csv"])
     
@@ -87,7 +85,6 @@ elif menu == "PCOS Prediction":
                 st.write(f"### Prediction: {result}")
 
 elif menu == "Quiz":
-    st.image("https://www.example.com/quiz.jpg", use_column_width=True)
     st.write("### PCOS Risk Assessment Quiz")
     
     q1 = st.selectbox("Do you experience irregular periods?", ["No", "Sometimes", "Yes"])
@@ -106,7 +103,6 @@ elif menu == "Quiz":
             st.write("### Low Risk: You have minimal risk of PCOS.")
 
 elif menu == "Health Recipes":
-    st.image("https://www.example.com/recipes.jpg", use_column_width=True)
     st.write("### Healthy Recipes for PCOS")
     
     recipes = {
@@ -116,6 +112,20 @@ elif menu == "Health Recipes":
     }
     
     selected_recipe = st.selectbox("Click to know more about a recipe", list(recipes.keys()))
-    st.image(f"https://www.example.com/{selected_recipe.replace(' ', '_').lower()}.jpg", use_column_width=True)
     st.write(f"### {selected_recipe}")
     st.write(recipes[selected_recipe])
+
+elif menu == "Games":
+    st.write("### Health Assessment Game")
+    health_q1 = st.selectbox("How often do you exercise?", ["Rarely", "1-2 times a week", "3+ times a week"])
+    health_q2 = st.selectbox("Do you consume a balanced diet?", ["No", "Sometimes", "Yes"])
+    health_q3 = st.selectbox("How is your water intake?", ["Less than 1L", "1-2L", "More than 2L"])
+    
+    if st.button("Get Health Score"):
+        score = sum([health_q1 == "3+ times a week", health_q2 == "Yes", health_q3 == "More than 2L"])
+        if score == 3:
+            st.write("### Excellent Health! Keep up the great work! 💪")
+        elif score == 2:
+            st.write("### Good Health! Try improving in one area for even better well-being.")
+        else:
+            st.write("### Needs Improvement: Consider exercising, eating healthier, and staying hydrated.")
