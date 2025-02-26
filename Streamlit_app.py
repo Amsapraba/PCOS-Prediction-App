@@ -1,6 +1,7 @@
 import streamlit as st
 import joblib
 import pandas as pd
+import numpy as np
 
 # Load the trained model
 @st.cache_resource
@@ -10,7 +11,8 @@ def load_model():
 model = load_model()
 
 # Streamlit UI
-st.title("PCOS Prediction App")
+st.set_page_config(page_title="PCOS Prediction App", layout="centered")
+st.title("🌸 PCOS Prediction App")
 
 # User input fields
 age = st.number_input("Enter Age", min_value=10, max_value=60, value=25)
@@ -21,7 +23,7 @@ height = st.number_input("Enter Height (cm)", min_value=100, max_value=200, valu
 bmi = weight / ((height / 100) ** 2)
 
 # Predict button
-if st.button("Predict PCOS"):
+if st.button("🔍 Predict PCOS"):
     input_data = pd.DataFrame([[age, bmi]], columns=["Age", "BMI"])  # Adjust based on dataset
     prediction = model.predict(input_data)
     
@@ -29,4 +31,3 @@ if st.button("Predict PCOS"):
         st.error("⚠️ High risk of PCOS detected! Please consult a doctor.")
     else:
         st.success("✅ You are healthy! No signs of PCOS detected.")
-
