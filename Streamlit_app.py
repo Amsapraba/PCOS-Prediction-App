@@ -14,7 +14,7 @@ st.title("PCOS Prediction App")
 menu = st.sidebar.radio("Navigation", ["Home", "PCOS Prediction", "Quiz", "Health Recipes"])
 
 if menu == "Home":
-    st.image("https://www.example.com/home_image.jpg", use_column_width=True)
+    st.image("https://www.istockphoto.com/video/polycystic-ovarian-syndrome-2d-animation-gm1358282384-431958796?utm_campaign=srp_photos_top&utm_content=https%3A%2F%2Funsplash.com%2Fs%2Fphotos%2Fpcos&utm_medium=affiliate&utm_source=unsplash&utm_term=pcos%3A%3Avideo-affiliates%3Aexperiment.jpg", use_column_width=True)
     st.write("## Hey there! What’s up? Click on any of the features in the dashboard to get started.")
     st.write("Use this tool to predict PCOS risk, take a quiz to assess symptoms, and explore healthy recipes!")
 
