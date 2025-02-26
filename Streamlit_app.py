@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -74,6 +75,21 @@ elif menu == "PCOS Prediction":
                 result = "PCOS Detected" if prediction == 1 else "No PCOS Detected"
                 st.write(f"### Prediction: {result}")
 
+elif menu == "Quiz":
+    st.write("### PCOS Awareness Quiz")
+    questions = {
+        "What is a common symptom of PCOS?": ["Weight gain", "Hair loss", "Irregular periods", "All of the above"],
+        "Which hormone is often elevated in PCOS?": ["Estrogen", "Progesterone", "Insulin", "Testosterone"],
+        "Which lifestyle change can help manage PCOS?": ["Exercise", "Balanced diet", "Stress reduction", "All of the above"]
+    }
+    
+    for question, options in questions.items():
+        answer = st.radio(question, options)
+        if answer == options[-1]:
+            st.write("✅ Correct!")
+        else:
+            st.write("❌ Incorrect, try again!")
+
 elif menu == "Health Recipes":
     st.write("### Healthy Recipes for PCOS")
     recipes = {
@@ -85,48 +101,29 @@ elif menu == "Health Recipes":
     st.write(f"### {selected_recipe}")
     st.write(recipes[selected_recipe])
 
-elif menu == "Personalized Meal Plan":
-    st.write("### Your Personalized Meal Plan")
-    meal_plan = {
-        "Breakfast": "Oatmeal with chia seeds and berries",
-        "Lunch": "Grilled chicken with quinoa and steamed veggies",
-        "Snack": "Greek yogurt with nuts",
-        "Dinner": "Salmon with roasted sweet potatoes and broccoli"
-    }
-    for meal, description in meal_plan.items():
-        st.write(f"**{meal}:** {description}")
-
-elif menu == "Games":
-    st.write("### Health Check Game")
-    health_score = 0
-    activity = st.selectbox("How often do you exercise?", ["Never", "Rarely", "Often", "Daily"])
-    diet = st.selectbox("How healthy is your diet?", ["Poor", "Average", "Good", "Excellent"])
-    sleep = st.selectbox("How many hours of sleep do you get?", ["<5", "5-6", "7-8", "More than 8"])
-    hydration = st.selectbox("How much water do you drink daily?", ["<1L", "1-2L", "2-3L", "More than 3L"])
-    
-    if activity in ["Often", "Daily"]: health_score += 1
-    if diet in ["Good", "Excellent"]: health_score += 1
-    if sleep in ["7-8", "More than 8"]: health_score += 1
-    if hydration in ["2-3L", "More than 3L"]: health_score += 1
-    
-    if st.button("Check Your Health Score"):
-        if health_score == 4:
-            st.write("### Great Job! You have excellent health habits! Keep it up!")
-        elif health_score == 3:
-            st.write("### You're doing well, but there’s room for improvement!")
-        else:
-            st.write("### Consider making healthier choices for a better lifestyle.")
-
 elif menu == "Mood Tracker":
     st.write("### Mood Tracker")
-    mood = st.radio("How are you feeling today?", ["Happy", "Stressed", "Tired", "Motivated", "Anxious", "Excited"])
-    if mood == "Happy":
-        st.write("That's great! Keep up the positivity!")
-    elif mood == "Stressed":
-        st.write("Take a deep breath and relax. Try some meditation!")
-    elif mood == "Tired":
-        st.write("Get some rest and stay hydrated!")
-    elif mood == "Anxious":
-        st.write("Try some relaxation techniques like deep breathing!")
-    else:
-        st.write("Stay focused and keep up the good work!")
+    
+    if "mood_log" not in st.session_state:
+        st.session_state.mood_log = []
+    
+    mood = st.radio("How are you feeling today?", ["Happy", "Stressed", "Tired", "Motivated"])
+    note = st.text_area("Write a short journal entry about your mood (optional):")
+    
+    if st.button("Log Mood"):
+        st.session_state.mood_log.append((mood, note))
+        st.success("Mood logged successfully!")
+    
+    if st.session_state.mood_log:
+        st.write("### Your Mood Log")
+        df_mood = pd.DataFrame(st.session_state.mood_log, columns=["Mood", "Journal"])
+        st.dataframe(df_mood)
+        
+        st.write("### Mood Trend")
+        mood_counts = df_mood["Mood"].value_counts()
+        plt.figure(figsize=(5, 3))
+        plt.bar(mood_counts.index, mood_counts.values, color='skyblue')
+        plt.xlabel("Mood")
+        plt.ylabel("Count")
+        plt.title("Mood Trends")
+        st.pyplot(plt)
