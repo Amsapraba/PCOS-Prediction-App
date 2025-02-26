@@ -11,7 +11,7 @@ from sklearn.preprocessing import LabelEncoder
 st.title("PCOS Prediction App")
 
 # Sidebar navigation
-menu = st.sidebar.radio("Navigation", ["Home", "PCOS Prediction", "Quiz", "Health Recipes", "Games"])
+menu = st.sidebar.radio("Navigation", ["Home", "PCOS Prediction", "Quiz", "Health Recipes", "Games", "Personalized Meal Plan"])
 
 if menu == "Home":
     st.write("## Hey there! What’s up? Click on any of the features in the dashboard to get started.")
@@ -115,17 +115,16 @@ elif menu == "Health Recipes":
     st.write(f"### {selected_recipe}")
     st.write(recipes[selected_recipe])
 
-elif menu == "Games":
-    st.write("### Health Assessment Game")
-    health_q1 = st.selectbox("How often do you exercise?", ["Rarely", "1-2 times a week", "3+ times a week"])
-    health_q2 = st.selectbox("Do you consume a balanced diet?", ["No", "Sometimes", "Yes"])
-    health_q3 = st.selectbox("How is your water intake?", ["Less than 1L", "1-2L", "More than 2L"])
+elif menu == "Personalized Meal Plan":
+    st.write("### Get Your Personalized Meal Plan")
+    diet_type = st.selectbox("Select your diet preference", ["Vegetarian", "Non-Vegetarian", "Vegan"])
+    sugar_intake = st.selectbox("Do you consume a lot of sugar?", ["No", "Sometimes", "Yes"])
+    junk_food = st.selectbox("Do you eat processed or junk food often?", ["No", "Sometimes", "Yes"])
     
-    if st.button("Get Health Score"):
-        score = sum([health_q1 == "3+ times a week", health_q2 == "Yes", health_q3 == "More than 2L"])
-        if score == 3:
-            st.write("### Excellent Health! Keep up the great work! 💪")
-        elif score == 2:
-            st.write("### Good Health! Try improving in one area for even better well-being.")
+    if st.button("Generate Meal Plan"):
+        if diet_type == "Vegetarian":
+            st.write("- Breakfast: Oats with chia seeds and berries\n- Lunch: Quinoa salad with chickpeas\n- Dinner: Lentil soup with whole wheat bread")
+        elif diet_type == "Non-Vegetarian":
+            st.write("- Breakfast: Scrambled eggs with whole wheat toast\n- Lunch: Grilled chicken with quinoa\n- Dinner: Salmon with steamed veggies")
         else:
-            st.write("### Needs Improvement: Consider exercising, eating healthier, and staying hydrated.")
+            st.write("- Breakfast: Smoothie with almond milk and nuts\n- Lunch: Stir-fried tofu with quinoa\n- Dinner: Lentil soup with mixed greens")
