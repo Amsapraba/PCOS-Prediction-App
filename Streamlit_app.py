@@ -115,16 +115,22 @@ elif menu == "Health Recipes":
     st.write(f"### {selected_recipe}")
     st.write(recipes[selected_recipe])
 
-elif menu == "Personalized Meal Plan":
-    st.write("### Get Your Personalized Meal Plan")
-    diet_type = st.selectbox("Select your diet preference", ["Vegetarian", "Non-Vegetarian", "Vegan"])
-    sugar_intake = st.selectbox("Do you consume a lot of sugar?", ["No", "Sometimes", "Yes"])
-    junk_food = st.selectbox("Do you eat processed or junk food often?", ["No", "Sometimes", "Yes"])
+elif menu == "Games":
+    st.write("### Health Check Game")
     
-    if st.button("Generate Meal Plan"):
-        if diet_type == "Vegetarian":
-            st.write("- Breakfast: Oats with chia seeds and berries\n- Lunch: Quinoa salad with chickpeas\n- Dinner: Lentil soup with whole wheat bread")
-        elif diet_type == "Non-Vegetarian":
-            st.write("- Breakfast: Scrambled eggs with whole wheat toast\n- Lunch: Grilled chicken with quinoa\n- Dinner: Salmon with steamed veggies")
+    health_score = 0
+    activity = st.selectbox("How often do you exercise?", ["Never", "Rarely", "Often", "Daily"])
+    diet = st.selectbox("How healthy is your diet?", ["Poor", "Average", "Good", "Excellent"])
+    sleep = st.selectbox("How many hours of sleep do you get?", ["<5", "5-6", "7-8", "More than 8"])
+    
+    if activity in ["Often", "Daily"]: health_score += 1
+    if diet in ["Good", "Excellent"]: health_score += 1
+    if sleep in ["7-8", "More than 8"]: health_score += 1
+    
+    if st.button("Check Your Health Score"):
+        if health_score == 3:
+            st.write("### Great Job! You have excellent health habits! Keep it up!")
+        elif health_score == 2:
+            st.write("### You're doing well, but there’s room for improvement!")
         else:
-            st.write("- Breakfast: Smoothie with almond milk and nuts\n- Lunch: Stir-fried tofu with quinoa\n- Dinner: Lentil soup with mixed greens")
+            st.write("### Consider making healthier choices for a better lifestyle.")
