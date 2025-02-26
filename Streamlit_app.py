@@ -1,101 +1,85 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
 import joblib
-from sklearn.ensemble import RandomForestClassifier
-import base64
-from fpdf import FPDF
+import pandas as pd
+import os
+import streamlit as st
 
-# Load trained model
-model = joblib.load("pcos_model.pkl")
-
-# Function to generate PDF report
-def generate_pdf(prediction, recommendations):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", style='', size=14)
-    pdf.cell(200, 10, "PCOS Prediction Report", ln=True, align='C')
-    pdf.ln(10)
-    pdf.cell(200, 10, f"Prediction: {prediction}", ln=True)
-    pdf.ln(10)
-    pdf.multi_cell(0, 10, f"Recommendations: {recommendations}")
-    pdf_filename = "pcos_report.pdf"
-    pdf.output(pdf_filename)
-    return pdf_filename
-
-# Streamlit UI
+# Streamlit UI setup
 st.set_page_config(page_title="PCOS Prediction", layout="wide")
-st.title("🌸 PCOS Prediction App")
+st.title("🌸 PCOS Prediction & Health Analysis")
 
-# Sidebar Virtual Assistant
-def virtual_assistant():
-    st.sidebar.title("👩‍⚕️ Virtual Assistant")
-    st.sidebar.write("Hey, how may I assist you?")
+# Load the trained model
+model_path = "pcos_model.pkl"
+if os.path.exists(model_path):
+    model = joblib.load(model_path)
+    st.success("✅ Model loaded successfully!")
+else:
+    st.error("🚨 Model file not found! Please upload 'pcos_model.pkl' to the repository.")
 
-virtual_assistant()
+# Load the dataset for visualization (if needed)
+csv_path = "pcos_data.csv"
+if os.path.exists(csv_path):
+    df = pd.read_csv(csv_path)
+    st.success("✅ Dataset loaded successfully!")
+else:
+    st.warning("⚠️ CSV file not found! Some visualizations may not work.")
 
-# Dashboard Navigation
-menu = ["Home", "Predict PCOS", "Health Games", "Quiz", "Generate Report"]
-choice = st.sidebar.radio("Navigation", menu)
+# Display dataset preview
+if "df" in locals():
+    st.write("### Sample Data:")
+    st.dataframe(df.head())
 
-if choice == "Home":
-    st.header("Welcome to the PCOS Prediction App!")
-    st.write("This AI-powered tool helps in early detection of PCOS using health parameters.")
+# Sidebar Navigation
+st.sidebar.title("Navigation")
+page = st.sidebar.radio("Go to", ["Home", "Predict PCOS", "Data Visualization", "Health Quiz"])
 
-elif choice == "Predict PCOS":
-    st.header("🔍 PCOS Prediction")
-    
-    # User Inputs
-    age = st.number_input("Age", min_value=15, max_value=50, value=25)
-    bmi = st.number_input("BMI", min_value=10.0, max_value=50.0, value=22.0)
-    cycle_length = st.number_input("Cycle Length (days)", min_value=15, max_value=60, value=28)
-    irregular_periods = st.radio("Irregular Periods?", ["Yes", "No"])
-    weight_gain = st.radio("Sudden Weight Gain?", ["Yes", "No"])
-    hair_growth = st.radio("Excessive Hair Growth?", ["Yes", "No"])
-    acne = st.radio("Frequent Acne Issues?", ["Yes", "No"])
-    
-    # Convert categorical to numerical
-    inputs = [age, bmi, cycle_length, int(irregular_periods == "Yes"), int(weight_gain == "Yes"), int(hair_growth == "Yes"), int(acne == "Yes")]
-    
-    if st.button("Predict Now"):
-        prediction = model.predict([inputs])
-        if prediction[0] == 1:
-            st.error("⚠️ High risk of PCOS detected. Consult a doctor.")
-            recommendations = "Maintain a balanced diet, exercise regularly, and consult a gynecologist."
+# Home Page
+if page == "Home":
+    st.subheader("Welcome to the PCOS Prediction App! 🚀")
+    st.write("This app predicts PCOS using an AI model and provides health insights.")
+
+# Prediction Page
+elif page == "Predict PCOS":
+    st.subheader("🔍 Predict PCOS")
+    st.write("Enter your details to check for PCOS risk.")
+
+    # Example input fields (Modify according to your dataset)
+    age = st.number_input("Age", min_value=10, max_value=50, value=25)
+    bmi = st.number_input("BMI", min_value=10.0, max_value=50.0, value=22.5)
+    cycle = st.number_input("Cycle Length (days)", min_value=10, max_value=50, value=28)
+
+    if st.button("Predict"):
+        if "model" in locals():
+            input_data = [[age, bmi, cycle]]
+            prediction = model.predict(input_data)
+            if prediction[0] == 1:
+                st.error("⚠️ High risk of PCOS detected! Consult a doctor.")
+            else:
+                st.success("✅ No PCOS risk detected! Maintain a healthy lifestyle.")
         else:
-            st.success("✅ You are healthy! Keep maintaining a good lifestyle.")
-            recommendations = "Continue with a healthy diet and regular check-ups."
-        
-        # Generate PDF Report
-        pdf_file = generate_pdf("High Risk" if prediction[0] == 1 else "Healthy", recommendations)
-        with open(pdf_file, "rb") as f:
-            pdf_data = f.read()
-        b64 = base64.b64encode(pdf_data).decode()
-        href = f'<a href="data:application/octet-stream;base64,{b64}" download="{pdf_file}">📄 Download Report</a>'
-        st.markdown(href, unsafe_allow_html=True)
+            st.error("Model not loaded. Please check!")
 
-elif choice == "Health Games":
-    st.header("🎮 Fun Health Games")
-    st.write("Coming Soon! Stay tuned for interactive games to improve health awareness.")
+# Data Visualization Page
+elif page == "Data Visualization":
+    st.subheader("📊 Data Insights")
+    if "df" in locals():
+        st.write("Data statistics:")
+        st.write(df.describe())
+    else:
+        st.warning("No dataset found!")
 
-elif choice == "Quiz":
-    st.header("🧠 Health Awareness Quiz")
-    question = "What lifestyle change helps in managing PCOS?"
-    options = ["A. Eating junk food", "B. Regular exercise", "C. Skipping meals"]
-    answer = st.radio(question, options)
-    if st.button("Submit Answer"):
-        if answer == "B. Regular exercise":
-            st.success("Correct! Regular exercise helps in PCOS management.")
+# Health Quiz Page
+elif page == "Health Quiz":
+    st.subheader("🧠 PCOS Awareness Quiz")
+    st.write("Test your knowledge about PCOS!")
+
+    question1 = st.radio("Q1: What is a common symptom of PCOS?", ["Weight loss", "Irregular periods", "High energy"])
+    if st.button("Submit Quiz"):
+        if question1 == "Irregular periods":
+            st.success("✅ Correct!")
         else:
-            st.error("Incorrect! Try again.")
+            st.error("❌ Incorrect! A common symptom is irregular periods.")
 
-elif choice == "Generate Report":
-    st.header("📄 Generate Personalized Report")
-    st.write("Click below to generate your instant PDF health report.")
-    if st.button("Generate Report Now"):
-        pdf_file = generate_pdf("Healthy", "Maintain a good lifestyle")
-        with open(pdf_file, "rb") as f:
-            pdf_data = f.read()
-        b64 = base64.b64encode(pdf_data).decode()
-        href = f'<a href="data:application/octet-stream;base64,{b64}" download="{pdf_file}">📄 Download Report</a>'
-        st.markdown(href, unsafe_allow_html=True)
+# Footer
+st.markdown("---")
+st.write("Developed with ❤️ for Smartathon Hackathon")
+
