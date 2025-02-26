@@ -14,7 +14,7 @@ st.title("PCOS Prediction App")
 menu = st.sidebar.radio("Navigation", ["Home", "PCOS Prediction", "Quiz", "Health Recipes"])
 
 if menu == "Home":
-    st.write("## Welcome to the PCOS Prediction App")
+    st.write("## Hey there! What’s up? Click on any of the features in the dashboard to get started.")
     st.write("Use this tool to predict PCOS risk, take a quiz to assess symptoms, and explore healthy recipes!")
 
 elif menu == "PCOS Prediction":
@@ -107,23 +107,12 @@ elif menu == "Health Recipes":
     # Healthy Recipes Section
     st.write("### Healthy Recipes for PCOS")
     
-    st.write("#### 1. Green Smoothie")
-    st.write("- 1 cup spinach")
-    st.write("- 1 banana")
-    st.write("- 1/2 cup Greek yogurt")
-    st.write("- 1 cup almond milk")
-    st.write("- Blend and enjoy!")
+    recipes = {
+        "Green Smoothie": "- 1 cup spinach\n- 1 banana\n- 1/2 cup Greek yogurt\n- 1 cup almond milk\n- Blend and enjoy!",
+        "Oatmeal with Chia Seeds": "- 1/2 cup rolled oats\n- 1 tbsp chia seeds\n- 1 cup almond milk\n- 1 tsp honey\n- Mix and let it sit for 10 minutes before eating.",
+        "Avocado Toast with Egg": "- 1 slice whole-grain bread\n- 1/2 avocado\n- 1 boiled egg\n- Salt and pepper to taste\n- Mash avocado on toast, add sliced egg, and season."
+    }
     
-    st.write("#### 2. Oatmeal with Chia Seeds")
-    st.write("- 1/2 cup rolled oats")
-    st.write("- 1 tbsp chia seeds")
-    st.write("- 1 cup almond milk")
-    st.write("- 1 tsp honey")
-    st.write("- Mix and let it sit for 10 minutes before eating.")
-    
-    st.write("#### 3. Avocado Toast with Egg")
-    st.write("- 1 slice whole-grain bread")
-    st.write("- 1/2 avocado")
-    st.write("- 1 boiled egg")
-    st.write("- Salt and pepper to taste")
-    st.write("- Mash avocado on toast, add sliced egg, and season.")
+    selected_recipe = st.selectbox("Click to know more about a recipe", list(recipes.keys()))
+    st.write(f"### {selected_recipe}")
+    st.write(recipes[selected_recipe])
