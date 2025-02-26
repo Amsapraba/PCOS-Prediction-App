@@ -14,10 +14,12 @@ st.title("PCOS Prediction App")
 menu = st.sidebar.radio("Navigation", ["Home", "PCOS Prediction", "Quiz", "Health Recipes"])
 
 if menu == "Home":
+    st.image("https://www.example.com/home_image.jpg", use_column_width=True)
     st.write("## Hey there! What’s up? Click on any of the features in the dashboard to get started.")
     st.write("Use this tool to predict PCOS risk, take a quiz to assess symptoms, and explore healthy recipes!")
 
 elif menu == "PCOS Prediction":
+    st.image("https://www.example.com/pcos_prediction.jpg", use_column_width=True)
     # Upload dataset
     uploaded_file = st.file_uploader("Upload your PCOS dataset (CSV)", type=["csv"])
     
@@ -85,7 +87,7 @@ elif menu == "PCOS Prediction":
                 st.write(f"### Prediction: {result}")
 
 elif menu == "Quiz":
-    # Quiz Section
+    st.image("https://www.example.com/quiz.jpg", use_column_width=True)
     st.write("### PCOS Risk Assessment Quiz")
     
     q1 = st.selectbox("Do you experience irregular periods?", ["No", "Sometimes", "Yes"])
@@ -104,7 +106,7 @@ elif menu == "Quiz":
             st.write("### Low Risk: You have minimal risk of PCOS.")
 
 elif menu == "Health Recipes":
-    # Healthy Recipes Section
+    st.image("https://www.example.com/recipes.jpg", use_column_width=True)
     st.write("### Healthy Recipes for PCOS")
     
     recipes = {
@@ -114,5 +116,6 @@ elif menu == "Health Recipes":
     }
     
     selected_recipe = st.selectbox("Click to know more about a recipe", list(recipes.keys()))
+    st.image(f"https://www.example.com/{selected_recipe.replace(' ', '_').lower()}.jpg", use_column_width=True)
     st.write(f"### {selected_recipe}")
     st.write(recipes[selected_recipe])
