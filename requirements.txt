@@ -4,4 +4,6 @@ numpy
 scikit-learn
 joblib
 fpdf
-base64
+xgboost
+lightgbm
+shap
