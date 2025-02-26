@@ -1,41 +1,58 @@
 import streamlit as st
-import joblib
+import pandas as pd
 import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.metrics import accuracy_score, classification_report
 
-# Load the trained model and scaler
-@st.cache_resource
-def load_model():
-    return joblib.load("pcos_model.pkl")
+# Load the dataset
+def load_data():
+    df = pd.read_csv("PCOS_data.csv")  # Replace with actual dataset path
+    return df
 
-@st.cache_resource
-def load_scaler():
-    return joblib.load("scaler.pkl")
+def preprocess_data(df):
+    # Assuming target column is 'PCOS' and other necessary preprocessing steps
+    X = df.drop(columns=['PCOS'])
+    y = df['PCOS']
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    return X_train, X_test, y_train, y_test
 
-model = load_model()
-scaler = load_scaler()
+def train_model(X_train, y_train):
+    model = RandomForestClassifier(n_estimators=100, random_state=42)
+    model.fit(X_train, y_train)
+    return model
+
+def evaluate_model(model, X_test, y_test):
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    report = classification_report(y_test, y_pred)
+    return accuracy, report
 
 # Streamlit UI
 st.title("PCOS Prediction App")
 
-# User input fields
-age = st.number_input("Enter Age", min_value=10, max_value=60, value=25)
-weight = st.number_input("Enter Weight (kg)", min_value=30, max_value=200, value=65)
-height = st.number_input("Enter Height (cm)", min_value=100, max_value=200, value=160)
-cycle_length = st.number_input("Enter Cycle Length (days)", min_value=15, max_value=50, value=28)
-follicle_count = st.number_input("Enter Follicle Count (Left Ovary)", min_value=0, max_value=30, value=5)
+st.sidebar.header("Upload PCOS Dataset")
+uploaded_file = st.sidebar.file_uploader("Upload CSV file", type=["csv"])
 
-# Convert height to meters and calculate BMI
-bmi = weight / ((height / 100) ** 2)
+if uploaded_file is not None:
+    df = pd.read_csv(uploaded_file)
+    st.write("### Sample Data")
+    st.write(df.head())
 
-# Prepare input data
-input_data = np.array([[age, bmi, cycle_length, follicle_count]])
-scaled_data = scaler.transform(input_data)
+    X_train, X_test, y_train, y_test = preprocess_data(df)
+    model = train_model(X_train, y_train)
+    accuracy, report = evaluate_model(model, X_test, y_test)
 
-# Predict button
-if st.button("Predict PCOS"):
-    prediction = model.predict(scaled_data)
+    st.write(f"### Model Accuracy: {accuracy:.2f}")
+    st.text(report)
+
+    st.write("### Make a Prediction")
+    user_input = {}
+    for col in X_train.columns:
+        user_input[col] = st.number_input(f"{col}", value=float(df[col].mean()))
     
-    if prediction[0] == 1:
-        st.error("⚠️ High risk of PCOS detected! Please consult a doctor.")
-    else:
-        st.success("✅ You are healthy! No signs of PCOS detected.")
+    if st.button("Predict"):
+        input_df = pd.DataFrame([user_input])
+        prediction = model.predict(input_df)
+        result = "PCOS Detected" if prediction[0] == 1 else "No PCOS Detected"
+        st.write(f"### Prediction: {result}")
