@@ -6,8 +6,8 @@ import os
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 
-# Function to load the trained model and scaler
-@st.cache_data  # Changed from @st.cache_resource to prevent infinite loading
+
+@st.cache_data  
 def load_model():
     try:
         model_path = "pcos_random_forest_model.pkl"
@@ -27,14 +27,14 @@ def load_model():
         st.error(f"⚠️ Error loading model: {e}")
         return None, None
 
-# Load model and scaler
+
 model, scaler = load_model()
 
-# Ensure the model and scaler are loaded
-if model is None or scaler is None:
-    st.stop()  # Stop execution if model or scaler fails to load
 
-# Define the expected feature names
+if model is None or scaler is None:
+    st.stop()  
+
+
 feature_names = [
     'Age (yrs)', 'Weight (Kg)', 'Height(Cm)', 'BMI', 'Pulse rate(bpm)', 'Hb(g/dl)',
     'Cycle(R/I)', 'Cycle length(days)', 'Marraige Status (Yrs)', 'Pregnant(Y/N)',
@@ -48,22 +48,22 @@ feature_names = [
     'BP _Diastolic (mmHg)', 'Waist:Hip Ratio', 'LH/FSH Ratio'
 ]
 
-# Streamlit UI
+
 st.title("PCOS Prediction App")
 st.write("Enter the required values to check if PCOS is detected or not.")
 
-# Collect user input
+
 user_input = []
 for i, feature in enumerate(feature_names):
     value = st.number_input(f"Enter {feature}", min_value=0.0, step=0.1, key=f"{feature}_{i}")
     user_input.append(value)
 
-# Prediction Button
+
 if st.button("Predict PCOS"):
-    # Convert input to numpy array and reshape
+   
     input_array = np.array([user_input])
     
-    # Debugging: Check the number of features
+    
     st.write(f"Input Shape: {input_array.shape}, Expected Features: {len(feature_names)}")
     if input_array.shape[1] != len(feature_names):
         st.error(f"🚨 Expected {len(feature_names)} features, but got {input_array.shape[1]}.")
