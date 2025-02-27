@@ -2,19 +2,39 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import joblib
+import os
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 
-# Load the trained model and scaler
-@st.cache_resource
+# Function to load the trained model and scaler
+@st.cache_data  # Changed from @st.cache_resource to prevent infinite loading
 def load_model():
-    model = joblib.load("pcos_random_forest_model.pkl")  # Path to saved model
-    scaler = joblib.load("scaler.pkl")  # Path to saved scaler
-    return model, scaler
+    try:
+        model_path = "pcos_random_forest_model.pkl"
+        scaler_path = "scaler.pkl"
+        
+        if not os.path.exists(model_path):
+            st.error("❌ Model file not found! Please check the file path.")
+            return None, None
+        if not os.path.exists(scaler_path):
+            st.error("❌ Scaler file not found! Please check the file path.")
+            return None, None
+        
+        model = joblib.load(model_path)
+        scaler = joblib.load(scaler_path)
+        return model, scaler
+    except Exception as e:
+        st.error(f"⚠️ Error loading model: {e}")
+        return None, None
 
+# Load model and scaler
 model, scaler = load_model()
 
-# Define the expected feature names (must match training data)
+# Ensure the model and scaler are loaded
+if model is None or scaler is None:
+    st.stop()  # Stop execution if model or scaler fails to load
+
+# Define the expected feature names
 feature_names = [
     'Age (yrs)', 'Weight (Kg)', 'Height(Cm)', 'BMI', 'Pulse rate(bpm)', 'Hb(g/dl)',
     'Cycle(R/I)', 'Cycle length(days)', 'Marraige Status (Yrs)', 'Pregnant(Y/N)',
@@ -32,7 +52,7 @@ feature_names = [
 st.title("PCOS Prediction App")
 st.write("Enter the required values to check if PCOS is detected or not.")
 
-# User input fields
+# Collect user input
 user_input = []
 for i, feature in enumerate(feature_names):
     value = st.number_input(f"Enter {feature}", min_value=0.0, step=0.1, key=f"{feature}_{i}")
@@ -42,15 +62,16 @@ for i, feature in enumerate(feature_names):
 if st.button("Predict PCOS"):
     # Convert input to numpy array and reshape
     input_array = np.array([user_input])
-
+    
     # Debugging: Check the number of features
+    st.write(f"Input Shape: {input_array.shape}, Expected Features: {len(feature_names)}")
     if input_array.shape[1] != len(feature_names):
-        st.error(f"Expected {len(feature_names)} features, but got {input_array.shape[1]} features.")
+        st.error(f"🚨 Expected {len(feature_names)} features, but got {input_array.shape[1]}.")
     else:
-        # Scale the input and predict
-        input_scaled = scaler.transform(input_array)
-        prediction = model.predict(input_scaled)
-
-        # Output result
-        result = "PCOS Detected" if prediction[0] == 1 else "No PCOS Detected"
-        st.subheader(f"Prediction Result: {result}")import streamlit as st
+        try:
+            input_scaled = scaler.transform(input_array)
+            prediction = model.predict(input_scaled)
+            result = "PCOS Detected" if prediction[0] == 1 else "No PCOS Detected"
+            st.subheader(f"Prediction Result: {result}")
+        except Exception as e:
+            st.error(f"⚠️ Prediction Error: {e}")
