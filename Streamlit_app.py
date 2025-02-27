@@ -1,79 +1,51 @@
+import streamlit as st
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestClassifier, StackingClassifier
-from sklearn.linear_model import LogisticRegression
-from xgboost import XGBClassifier
-from lightgbm import LGBMClassifier
-from sklearn.metrics import accuracy_score, classification_report
-import streamlit as st
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
 
-# Load Dataset
-df = pd.read_csv("PCOS_data.csv")
-
-# Display the dataset in Streamlit
-st.title("PCOS Dataset Viewer")
-st.write("Here is the loaded dataset:")
-st.dataframe(df)
-
-# Clean column names
-df.columns = df.columns.str.strip().str.replace(" ", "_").str.replace("/", "_")
-
-# Drop unnecessary columns
-df.drop(columns=["Sl_No", "Patient_File_No", "Unnamed_44"], inplace=True, errors='ignore')
-
-# Convert object columns to numeric
-df["II_beta_HCG_mIU_mL"] = pd.to_numeric(df["II_beta_HCG_mIU_mL"], errors='coerce')
-df["AMH_ng_mL"] = pd.to_numeric(df["AMH_ng_mL"], errors='coerce')
-df["Avg_F_size_R_mm"] = pd.to_numeric(df["Avg_F_size_R_mm"], errors='coerce')
-
-# Fill missing values
-df.fillna(df.median(), inplace=True)
-
-# Define features and target
-X = df.drop(columns=["PCOS_Y_N"])
-y = df["PCOS_Y_N"]
-
-# Ensure feature names are strings for LightGBM compatibility
-X.columns = X.columns.astype(str)
-
-# Train-test split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# Feature Scaling
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
-
-# Define Models
-rf = RandomForestClassifier(n_estimators=100, random_state=42)
-xgb = XGBClassifier(eval_metric='logloss')
-lgbm = LGBMClassifier()
-lr = LogisticRegression()
-
-# Stacking Ensemble
-stacking_model = StackingClassifier(estimators=[('rf', rf), ('xgb', xgb), ('lgbm', lgbm)], final_estimator=lr)
-stacking_model.fit(X_train, y_train)
-
-# Predictions
-y_pred = stacking_model.predict(X_test)
-print("Accuracy:", accuracy_score(y_test, y_pred))
-print(classification_report(y_test, y_pred))
-
-# Streamlit App
-def predict_pcos(user_input):
-    user_input = np.array(user_input).reshape(1, -1)
-    user_input = scaler.transform(user_input)
-    prediction = stacking_model.predict(user_input)
-    return "PCOS Detected" if prediction[0] == 1 else "No PCOS"
-
+# Title
 st.title("PCOS Prediction App")
-st.write("Enter details to predict PCOS")
 
-# User Inputs
-user_data = [st.number_input(col, value=0.0) for col in X.columns]
+# Upload dataset
+uploaded_file = st.file_uploader("Upload your PCOS dataset (CSV)", type=["csv"])
 
-if st.button("Predict"):
-    result = predict_pcos(user_data)
-    st.write(result)
+if uploaded_file:
+    # Load Data
+    df = pd.read_csv(uploaded_file)
+    
+    # Ensure 'PCOS' column exists
+    if "PCOS" not in df.columns:
+        st.error("Error: 'PCOS' column not found. Please check your dataset.")
+    else:
+        # Show sample data
+        st.write("### Sample Data", df.head())
+
+        # Prepare data
+        X = df.drop(columns=["PCOS"])  # Features
+        y = df["PCOS"]  # Target
+
+        # Split data
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+        # Train model
+        model = RandomForestClassifier(n_estimators=100, random_state=42)
+        model.fit(X_train, y_train)
+
+        # Show model accuracy
+        y_pred = model.predict(X_test)
+        accuracy = accuracy_score(y_test, y_pred)
+        st.write(f"### Model Accuracy: {accuracy:.2f}")
+
+        # Prediction Section
+        st.write("### Enter Details for Prediction")
+        user_input = {}
+        for col in X.columns:
+            user_input[col] = st.number_input(f"{col}", value=float(df[col].mean()))
+
+        if st.button("Predict"):
+            input_df = pd.DataFrame([user_input])
+            prediction = model.predict(input_df)[0]
+            result = "PCOS Detected" if prediction == 1 else "No PCOS Detected"
+            st.write(f"### Prediction: {result}")
