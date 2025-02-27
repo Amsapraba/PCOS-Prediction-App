@@ -8,8 +8,8 @@ from sklearn.ensemble import RandomForestClassifier
 # Load the trained model and scaler
 @st.cache_resource
 def load_model():
-    model = joblib.load("/content/pcos_random_forest_model.pkl")  # Path to saved model
-    scaler = joblib.load("/content/scaler.pkl")  # Path to saved scaler
+    model = joblib.load("pcos_random_forest_model.pkl")  # Path to saved model
+    scaler = joblib.load("scaler.pkl")  # Path to saved scaler
     return model, scaler
 
 model, scaler = load_model()
@@ -63,8 +63,8 @@ from sklearn.ensemble import RandomForestClassifier
 # Load the trained model and scaler
 @st.cache_resource
 def load_model():
-    model = joblib.load("/content/pcos_random_forest_model.pkl")  # Path to saved model
-    scaler = joblib.load("/content/scaler.pkl")  # Path to saved scaler
+    model = joblib.load("pcos_random_forest_model.pkl")  # Path to saved model
+    scaler = joblib.load("scaler.pkl")  # Path to saved scaler
     return model, scaler
 
 model, scaler = load_model()
