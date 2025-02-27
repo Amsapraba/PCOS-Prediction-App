@@ -8,7 +8,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 import joblib
 # Load Dataset
-df = pd.read_csv(r"C:\Users\Sridevi\Desktop\PCOS1\PCOS\PCOS_data.csv")
+df = pd.read_csv("PCOS_data.csv")  # Ensure the CSV is in the same directory as the script
 
 # Drop unnecessary columns
 df.drop(columns=["Sl. No", "Patient File No.", "Unnamed: 44"], errors='ignore', inplace=True)
