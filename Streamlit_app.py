@@ -5,6 +5,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import accuracy_score
+import re
 
 # Streamlit App Setup
 st.set_page_config(page_title="PCOS Prediction", layout="wide")
@@ -23,18 +24,14 @@ if uploaded_file is not None:
         st.subheader("Dataset Preview")
         st.dataframe(df)
 
-        # Ensure column names are strings
-        df.columns = df.columns.astype(str)
-
-        # Drop any non-relevant columns if necessary (modify as needed)
-        if 'ID' in df.columns:
-            df.drop(columns=['ID'], inplace=True)
+        # Fix column names: Remove special characters and replace spaces
+        df.columns = [re.sub(r'[^a-zA-Z0-9_]', '', col).replace(" ", "_") for col in df.columns]
 
         # Identify target variable
-        target_column = "PCOS (Y/N)"  # Change this if your target column has a different name
+        target_column = "PCOS_YN"  # Change based on dataset
 
         if target_column not in df.columns:
-            st.error("Target column not found in dataset!")
+            st.error(f"Target column '{target_column}' not found! Check column names.")
         else:
             # Separate features and target
             X = df.drop(columns=[target_column])
@@ -48,14 +45,18 @@ if uploaded_file is not None:
                 le = LabelEncoder()
                 X[col] = le.fit_transform(X[col])
 
-            # Split data into training and test sets
+            # Split data
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-            # Convert to LightGBM dataset format
+            # Ensure column names are valid
+            X_train.columns = X_train.columns.astype(str)
+            X_test.columns = X_test.columns.astype(str)
+
+            # LightGBM dataset
             train_data = lgb.Dataset(X_train, label=y_train)
             valid_data = lgb.Dataset(X_test, label=y_test, reference=train_data)
 
-            # Define model parameters
+            # LightGBM parameters
             params = {
                 "objective": "binary",
                 "metric": "accuracy",
@@ -65,22 +66,24 @@ if uploaded_file is not None:
                 "verbose": -1
             }
 
-            # Train the model
+            # Train model
             model = lgb.train(params, train_data, valid_sets=[valid_data], verbose_eval=10)
 
-            # Make predictions
+            # Predictions
             y_pred = model.predict(X_test)
-            y_pred_binary = np.round(y_pred)  # Convert probabilities to binary classes
+            y_pred_binary = np.round(y_pred)
 
-            # Calculate accuracy
+            # Accuracy
             accuracy = accuracy_score(y_test, y_pred_binary)
-
-            # Display results
             st.subheader("Model Performance")
             st.write(f"**Accuracy:** {accuracy:.2f}")
 
+            # Save model
+            model.save_model("pcos_model.txt")
+            st.download_button("Download Model", "pcos_model.txt", "pcos_model.txt")
+
     except Exception as e:
-        st.error(f"Error loading file: {e}")
+        st.error(f"Error: {e}")
 
 else:
     st.warning("Please upload a CSV file to proceed.")
