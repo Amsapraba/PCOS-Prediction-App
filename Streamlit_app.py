@@ -1,86 +1,77 @@
-import pandas as pd
+import streamlit as st
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+import pandas as pd
 import joblib
-# Load Dataset
-df = pd.read_csv("PCOS_data.csv", nrows=500)  # Ensure the CSV is in the same directory as the script
+import os
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
 
-# Drop unnecessary columns
-df.drop(columns=["Sl. No", "Patient File No.", "Unnamed: 44"], errors='ignore', inplace=True)
+# Function to load the trained model and scaler
+@st.cache_data  # Changed from @st.cache_resource to prevent infinite loading
+def load_model():
+    try:
+        model_path = "pcos_random_forest_model.pkl"
+        scaler_path = "scaler.pkl"
+        
+        if not os.path.exists(model_path):
+            st.error("❌ Model file not found! Please check the file path.")
+            return None, None
+        if not os.path.exists(scaler_path):
+            st.error("❌ Scaler file not found! Please check the file path.")
+            return None, None
+        
+        model = joblib.load(model_path)
+        scaler = joblib.load(scaler_path)
+        return model, scaler
+    except Exception as e:
+        st.error(f"⚠️ Error loading model: {e}")
+        return None, None
 
-# Convert all columns to proper numeric values
-for col in df.columns:
-    df[col] = pd.to_numeric(df[col], errors='coerce')  # Convert invalid numbers to NaN
+# Load model and scaler
+model, scaler = load_model()
 
-# Handle missing values (Drop rows with NaN)
-df.dropna(inplace=True)
+# Ensure the model and scaler are loaded
+if model is None or scaler is None:
+    st.stop()  # Stop execution if model or scaler fails to load
 
-# Convert categorical columns to numeric
-categorical_columns = ['Blood Group', 'Fast food (Y/N)', 'Reg.Exercise(Y/N)']
-for col in categorical_columns:
-    if col in df.columns:
-        df[col] = LabelEncoder().fit_transform(df[col].astype(str))
+# Define the expected feature names
+feature_names = [
+    'Age (yrs)', 'Weight (Kg)', 'Height(Cm)', 'BMI', 'Pulse rate(bpm)', 'Hb(g/dl)',
+    'Cycle(R/I)', 'Cycle length(days)', 'Marraige Status (Yrs)', 'Pregnant(Y/N)',
+    'No. of aborptions', 'Blood Group', 'Fast food (Y/N)', 'Reg.Exercise(Y/N)',
+    'I   beta-HCG(mIU/mL)', 'II    beta-HCG(mIU/mL)', 'FSH(mIU/mL)', 'LH(mIU/mL)',
+    'FSH/LH', 'Hip(inch)', 'Waist(inch)', 'TSH (mIU/L)', 'AMH(ng/mL)', 'PRL(ng/mL)',
+    'Vit D3 (ng/mL)', 'PRG(ng/mL)', 'RBS(mg/dl)', 'Weight gain(Y/N)',
+    'hair growth(Y/N)', 'Skin darkening (Y/N)', 'Hair loss(Y/N)', 'Pimples(Y/N)',
+    'Follicle No. (L)', 'Follicle No. (R)', 'Avg. F size (L) (mm)',
+    'Avg. F size (R) (mm)', 'Endometrium (mm)', 'BP _Systolic (mmHg)',
+    'BP _Diastolic (mmHg)', 'Waist:Hip Ratio', 'LH/FSH Ratio'
+]
 
-# Define Features (X) and Target (y)
-X = df.drop(columns=['PCOS (Y/N)'], errors='ignore')  # Drop target column
-y = df['PCOS (Y/N)']
+# Streamlit UI
+st.title("PCOS Prediction App")
+st.write("Enter the required values to check if PCOS is detected or not.")
 
-# Train-Test Split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Collect user input
+user_input = []
+for i, feature in enumerate(feature_names):
+    value = st.number_input(f"Enter {feature}", min_value=0.0, step=0.1, key=f"{feature}_{i}")
+    user_input.append(value)
 
-# Feature Scaling
-scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)
-X_test_scaled = scaler.transform(X_test)
-
-# Train Machine Learning Model (Random Forest)
-model = RandomForestClassifier(n_estimators=100, random_state=42)
-model.fit(X_train_scaled, y_train)
-
-# Model Evaluation
-y_pred = model.predict(X_test_scaled)
-accuracy = accuracy_score(y_test, y_pred)
-conf_matrix = confusion_matrix(y_test, y_pred)
-class_report = classification_report(y_test, y_pred)
-
-print(f"Model Accuracy: {accuracy:.2f}")
-print("Confusion Matrix:\n", conf_matrix)
-print("Classification Report:\n", class_report)
-
-# Feature Importance
-feature_importances = pd.Series(model.feature_importances_, index=X.columns)
-feature_importances.sort_values(ascending=False).plot(kind='bar', figsize=(12, 6))
-plt.title("Feature Importance")
-plt.show()
-
-# Save the model and scaler
-model_filename = "pcos_random_forest_model.pkl"
-scaler_filename = "scaler.pkl"
-joblib.dump(model, model_filename)
-joblib.dump(scaler, scaler_filename)
-
-print(f"Model saved as {model_filename}")
-print(f"Scaler saved as {scaler_filename}")
-
-# Print the number of features for reference
-print(f"Number of features in training data: {X.shape[1]}")
-print("Feature names:", X.columns.tolist())
-
-# Example prediction with consistent sample input
-# Ensure the sample_input matches the number of features in X (41 in this case)
-sample_input = np.array([[
-    28, 19.3, 44.6, 152, 78, 10.48, 22, 5, 7, 0, 0, 15, 1, 0,
-    1.99, 1.99, 7.95, 3.68, 2.16, 36, 30, 0.83, 0.68, 2.07,
-    45.16, 17.1, 0.57, 92, 0, 0, 0, 0, 0, 1, 0, 110, 80, 3,
-    3, 18, 18
-]])  # Adjusted to 41 features based on typical PCOS dataset structure
-
-# Scale and predict
-sample_input_scaled = scaler.transform(sample_input)
-prediction = model.predict(sample_input_scaled)
-print(f"Predicted PCOS (Y/N): {prediction[0]}")
+# Prediction Button
+if st.button("Predict PCOS"):
+    # Convert input to numpy array and reshape
+    input_array = np.array([user_input])
+    
+    # Debugging: Check the number of features
+    st.write(f"Input Shape: {input_array.shape}, Expected Features: {len(feature_names)}")
+    if input_array.shape[1] != len(feature_names):
+        st.error(f"🚨 Expected {len(feature_names)} features, but got {input_array.shape[1]}.")
+    else:
+        try:
+            input_scaled = scaler.transform(input_array)
+            prediction = model.predict(input_scaled)
+            result = "PCOS Detected" if prediction[0] == 1 else "No PCOS Detected"
+            st.subheader(f"Prediction Result: {result}")
+        except Exception as e:
+            st.error(f"⚠️ Prediction Error: {e}")
