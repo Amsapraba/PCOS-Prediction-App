@@ -11,20 +11,23 @@ import streamlit as st
 # Load Dataset
 df = pd.read_csv("PCOS_data.csv")
 
+# Clean column names
+df.columns = df.columns.str.strip().str.replace(" ", "_").str.replace("/", "_")
+
 # Drop unnecessary columns
-df.drop(columns=["Sl. No", "Patient File No.", "Unnamed: 44"], inplace=True)
+df.drop(columns=["Sl_No", "Patient_File_No", "Unnamed_44"], inplace=True, errors='ignore')
 
 # Convert object columns to numeric
-df["II    beta-HCG(mIU/mL)"] = pd.to_numeric(df["II    beta-HCG(mIU/mL)"], errors='coerce')
-df["AMH(ng/mL)"] = pd.to_numeric(df["AMH(ng/mL)"], errors='coerce')
-df["Avg. F size (R) (mm)"] = pd.to_numeric(df["Avg. F size (R) (mm)"], errors='coerce')
+df["II_beta_HCG_mIU_mL"] = pd.to_numeric(df["II_beta_HCG_mIU_mL"], errors='coerce')
+df["AMH_ng_mL"] = pd.to_numeric(df["AMH_ng_mL"], errors='coerce')
+df["Avg_F_size_R_mm"] = pd.to_numeric(df["Avg_F_size_R_mm"], errors='coerce')
 
 # Fill missing values
 df.fillna(df.median(), inplace=True)
 
 # Define features and target
-X = df.drop(columns=["PCOS (Y/N)"])
-y = df["PCOS (Y/N)"]
+X = df.drop(columns=["PCOS_Y_N"])
+y = df["PCOS_Y_N"]
 
 # Train-test split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -36,7 +39,7 @@ X_test = scaler.transform(X_test)
 
 # Define Models
 rf = RandomForestClassifier(n_estimators=100, random_state=42)
-xgb = XGBClassifier(use_label_encoder=False, eval_metric='logloss')
+xgb = XGBClassifier(eval_metric='logloss')
 lr = LogisticRegression()
 
 # Stacking Ensemble
