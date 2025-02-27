@@ -8,7 +8,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 import joblib
 # Load Dataset
-file_path = "/content/PCOS_data.csv"  # Replace with your dataset path
+file_path = "C:\Users\Sridevi\Desktop\PCOS1\PCOS\PCOS_data.csv"  # Replace with your dataset path
 df = pd.read_csv(file_path)
 
 # Drop unnecessary columns
