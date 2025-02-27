@@ -5,11 +5,17 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier, StackingClassifier
 from sklearn.linear_model import LogisticRegression
 from xgboost import XGBClassifier
+from lightgbm import LGBMClassifier
 from sklearn.metrics import accuracy_score, classification_report
 import streamlit as st
 
 # Load Dataset
 df = pd.read_csv("PCOS_data.csv")
+
+# Display the dataset in Streamlit
+st.title("PCOS Dataset Viewer")
+st.write("Here is the loaded dataset:")
+st.dataframe(df)
 
 # Clean column names
 df.columns = df.columns.str.strip().str.replace(" ", "_").str.replace("/", "_")
@@ -29,6 +35,9 @@ df.fillna(df.median(), inplace=True)
 X = df.drop(columns=["PCOS_Y_N"])
 y = df["PCOS_Y_N"]
 
+# Ensure feature names are strings for LightGBM compatibility
+X.columns = X.columns.astype(str)
+
 # Train-test split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
@@ -40,10 +49,11 @@ X_test = scaler.transform(X_test)
 # Define Models
 rf = RandomForestClassifier(n_estimators=100, random_state=42)
 xgb = XGBClassifier(eval_metric='logloss')
+lgbm = LGBMClassifier()
 lr = LogisticRegression()
 
 # Stacking Ensemble
-stacking_model = StackingClassifier(estimators=[('rf', rf), ('xgb', xgb)], final_estimator=lr)
+stacking_model = StackingClassifier(estimators=[('rf', rf), ('xgb', xgb), ('lgbm', lgbm)], final_estimator=lr)
 stacking_model.fit(X_train, y_train)
 
 # Predictions
